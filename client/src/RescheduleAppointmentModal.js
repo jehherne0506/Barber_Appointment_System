@@ -49,6 +49,8 @@ export default function RescheduleAppointmentModal({ rescheduleAppointmentModalO
                     if(dateSelected === selectedAppointment.date.split("T")[0]){
                         result.message.push({time: selectedAppointment?.startedAt + " - " + selectedAppointment?.endedAt, queueMin: ""});
                         setTimeslotSelectedIdx(result.message.length - 1);
+                    } else{
+                        setTimeslotSelectedIdx(0)
                     }
                     setAllTimeslot(result.message);
                 } else if(result.status === "fail" && result.message === "auth"){
@@ -148,7 +150,7 @@ export default function RescheduleAppointmentModal({ rescheduleAppointmentModalO
                 </Dialog>
             }
 
-            {isAuthenticated && selectedAppointment && modalPage === 1 && timeslotSelectedIdx &&
+            {isAuthenticated && selectedAppointment && modalPage === 1 && timeslotSelectedIdx !== null &&
                 <Dialog open={rescheduleAppointmentModalOpen} onClose={()=>{}} className="relative z-10">
                     <DialogBackdrop
                     transition
@@ -227,7 +229,7 @@ export default function RescheduleAppointmentModal({ rescheduleAppointmentModalO
                 </Dialog>
             }
             
-            {isAuthenticated && selectedAppointment && modalPage === 2 && timeslotSelectedIdx &&
+            {isAuthenticated && selectedAppointment && modalPage === 2 && timeslotSelectedIdx !== null &&
                 <Dialog open={rescheduleAppointmentModalOpen} onClose={()=>{}} className="relative z-10">
                     <DialogBackdrop
                     transition

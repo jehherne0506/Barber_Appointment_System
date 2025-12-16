@@ -3,6 +3,7 @@ import './App.css';
 
 import Register from "./Register";
 import Login from "./Login";
+import Home from "./Home";
 import VerifyEmailFailFallback from "./VerifyEmailFailFallback";
 import Appointment from "./Appointment";
 import PaymentSuccess from "./PaymentSuccess";
@@ -17,7 +18,7 @@ function App() {
           <Route path="/auth/register" element={<Register />} />
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/verifyEmail/fail" element={<VerifyEmailFailFallback />} />
-          {/* <Route path="/" element={<Home />} /> */}
+          <Route path="/" element={<Home />} />
           <Route path="/appointment" element={<Appointment />} />
           <Route path="/stripe/paymentSuccess" element={<PaymentSuccess />} />
 

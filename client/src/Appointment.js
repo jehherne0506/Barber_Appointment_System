@@ -62,23 +62,70 @@ export default function Appointment(){
         
         socket.emit("join", "customer");
 
-        socket.on("newAppointment", function(appointment){console.log(appointment);
-            setLiveQueue((currentQueue)=>{
-                if(!currentQueue){
-                    return currentQueue;
-                };
-                return currentQueue.map(queue => {
-                    if(queue.staff._id === appointment.staffId._id){
-                        return {
-                            ...queue,
-                            appointments: [
-                                ...queue.appointments,
-                                appointment
-                            ]
-                        }
-                    } return queue;
+        socket.on("newAppointment", function(appointment){
+            if(appointment.customerId._id === userRef.current.id){
+                setUpcomingAppointments((upcomingAppointments)=>{
+                    if(!upcomingAppointments){
+                        return [
+                            appointment
+                        ];
+                    };
+                    let newUpcomingAppointments = [...upcomingAppointments, appointment];
+                    return newUpcomingAppointments.sort((a,b)=>{
+                        const dateA = new Date(a.date);
+                        const dateB = new Date(b.date);
+                        const dateDiff = dateA - dateB;
+                        if(dateDiff !== 0){
+                            return dateDiff;
+                        } return a.queueMin - b.queueMin;
+                    });
+                });
+            }
+
+            if(appointment.date === new Date(new Date().toISOString().split("T")[0] + 'T00:00:00.000Z')){
+                setLiveQueue((currentQueue)=>{
+                    if(!currentQueue){
+                        return [
+                            {
+                                appointments: [
+                                    appointment
+                                ],
+                                _id: appointment.staffId._id,
+                                username: appointment.staffId.username,
+                            }
+                        ];
+                    };
+
+                    const staffIdx = currentQueue.findIndex(queue => queue._id === appointment.staffId._id);console.log(staffIdx);console.log(currentQueue)
+                    if(staffIdx!==-1){
+                        const appointmentAlreadyInList = currentQueue[staffIdx].appointments.some(queueAppointment => queueAppointment._id === appointment._id);
+                        if(!appointmentAlreadyInList){
+                            return currentQueue.map(queue => {
+                                if(queue._id === appointment.staffId._id){
+                                    return {
+                                        ...queue,
+                                        appointments: [
+                                            ...queue.appointments,
+                                            appointment
+                                        ]
+                                    }
+                                } return queue;
+                            });
+                        } return currentQueue
+                    } else{
+                        return [
+                            ...currentQueue,
+                            {
+                                appointments: [
+                                    appointment
+                                ],
+                                _id: appointment.staffId._id,
+                                username: appointment.staffId.username,
+                            }
+                        ]
+                    }
                 })
-            })
+            }
         })
 
         socket.on("appointmentInProgress", function(appointment){console.log(appointment)
@@ -106,7 +153,7 @@ export default function Appointment(){
                     return currentQueue;
                 };
                 return currentQueue.map(queue => {
-                    if(queue.staff._id === appointment.staffId._id){
+                    if(queue._id === appointment.staffId._id){
                         return {
                             ...queue,
                             appointments: queue.appointments.map(queueAppointment => {
@@ -147,16 +194,54 @@ export default function Appointment(){
                     return currentQueue;
                 };console.log(currentQueue)
                 return currentQueue.map(queue => {console.log(queue)
-                    return{
-                        ...queue,
-                        appointments: queue.appointments.map(queueAppointment => {
-                            if(queueAppointment._id === appointment._id){
-                                return {...queueAppointment, status: "COMPLETED"};
-                            } return queueAppointment;
-                        })
-                    }
+                    if(queue._id === appointment.staffId._id){
+                        return{
+                            ...queue,
+                            appointments: queue.appointments.map(queueAppointment => {
+                                if(queueAppointment._id === appointment._id){
+                                    return {...queueAppointment, status: "COMPLETED"};
+                                } return queueAppointment;
+                            })
+                        }
+                    } return queue;
                 })
             });
+        });
+
+        socket.on("rescheduleAppointment", function(appointmentData){
+            if(appointmentData.customerId._id === userRef.current.id){
+                setUpcomingAppointments(upcomingAppointments => {
+                    const newUpcomingAppointments = upcomingAppointments.map(upcomingAppointment => {
+                        if(upcomingAppointment._id === appointmentData._id){
+                            return {
+                                ...upcomingAppointment,
+                                date: appointmentData.date,
+                                startedAt: appointmentData.startedAt,
+                                endedAt: appointmentData.endedAt,
+                                startedAtDate: appointmentData.startedAtDate,
+                                endedAtDate: appointmentData.endedAtDate
+                            }
+                        };
+                        return upcomingAppointment;
+                    });
+                    return newUpcomingAppointments.sort((a,b)=>{
+                        const dateA = new Date(a.date);
+                        const dateB = new Date(b.date);
+                        if(dateA !== dateB){
+                            return dateA - dateB;
+                        };
+                        return a.queueMin - b.queueMin;
+                    })
+                })
+            }
+        });
+
+        socket.on("cancelAppointment", function(appointmentData){
+            if(appointmentData.customerId._id === userRef.current.id){
+                setUpcomingAppointments(upcomingAppointments => {
+                    return upcomingAppointments.filter(upcomingAppointment => upcomingAppointment._id !== appointmentData._id);
+                })
+            }
         });
 
         return ()=>{socket.disconnect()};
@@ -259,7 +344,7 @@ export default function Appointment(){
             <div className="border border-gray-200 p-4 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4 border-b pb-2">
-                    {/* <h3 className="font-bold text-lg text-gray-800">{barberLiveQueue.staff.username}</h3> */}
+                    <h3 className="font-bold text-lg text-gray-800">{barberLiveQueue?.username}</h3>
                     <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${inProgressQueue.length > 0 ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
                         {inProgressQueue.length > 0 ? "BUSY" : "AVAILABLE"}
                     </span>
@@ -273,7 +358,7 @@ export default function Appointment(){
                             <div key={app._id} className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
                                 <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
                                 <div>
-                                    <p className="font-bold text-blue-900 text-sm">{app.customerId === userRef.current.id ? "Me" : "Customer #" +  app.queueMin}</p>
+                                    <p className="font-bold text-blue-900 text-sm">{app.customerId._id === userRef.current.id ? "Me" : "Customer #" +  app.queueMin}</p>
                                     <p className="text-xs text-blue-600">{app.service?.name || "Service"}</p>
                                 </div>
                             </div>
@@ -297,7 +382,7 @@ export default function Appointment(){
                             scheduledQueue.map((app, idx) => (
                                 <div key={app._id} className="p-2 border border-gray-100 rounded bg-white flex justify-between items-center">
                                     <span className="text-sm font-medium text-gray-600">
-                                        {idx + 1}. {app.customerId === userRef.current.id ? "Me" : "Customer #" +  app.queueMin}
+                                        {idx + 1}. {app.customerId._id === userRef.current.id ? "Me" : "Customer #" +  app.queueMin}
                                     </span>
                                     <span className="text-xs text-gray-400 bg-gray-100 px-1 rounded">
                                         {app.queueMin - (new Date().getHours() * 60 + new Date().getMinutes()) > 0 ? 
@@ -352,8 +437,8 @@ export default function Appointment(){
                                                 <p>{appointment.startedAt} - {appointment.endedAt}</p>
                                             </div>
                                             <div>
-                                                <button onClick={()=>{setRescheduleAppointmentModalOpen(true); setSelectedAppointment(idx);}}>Reschedule</button>
-                                                <button onClick={()=>{setCancelAppointmentOpen(true); setSelectedAppointment(idx);}}>Cancel</button>
+                                                <button onClick={()=>{setRescheduleAppointmentModalOpen(true); setSelectedAppointment(appointment);}}>Reschedule</button>
+                                                <button onClick={()=>{setCancelAppointmentOpen(true); setSelectedAppointment(appointment);}}>Cancel</button>
                                             </div>
                                         </div>
                                     )
@@ -401,18 +486,18 @@ export default function Appointment(){
                     </div>
 
                     {makeAppointmentModalOpen &&
-                        <MakeAppointmentModal makeAppointmentModalOpen={makeAppointmentModalOpen} setMakeAppointmentModalOpen={setMakeAppointmentModalOpen} setSuccessModalOpen={()=>{setSuccessModalOpen(true); setSuccessModalType("makeAppointment")}} />
+                        <MakeAppointmentModal makeAppointmentModalOpen={makeAppointmentModalOpen} setMakeAppointmentModalOpen={setMakeAppointmentModalOpen} setSuccessModalOpen={()=>{setSuccessModalOpen(true); setSuccessModalType("makeAppointment")}} setUpcomingAppointments={setUpcomingAppointments} setLiveQueue={setLiveQueue} />
                     }
 
                     {rescheduleAppointmentModalOpen && selectedAppointment !== null &&
-                        <RescheduleAppointmentModal rescheduleAppointmentModalOpen={rescheduleAppointmentModalOpen} setRescheduleAppointmentModalOpen={setRescheduleAppointmentModalOpen} selectedAppointment={upcomingAppointments?.[selectedAppointment]} setSuccessModalOpen={()=>{setSuccessModalOpen(true); setSuccessModalType("rescheduleAppointment")}} />
+                        <RescheduleAppointmentModal rescheduleAppointmentModalOpen={rescheduleAppointmentModalOpen} setRescheduleAppointmentModalOpen={setRescheduleAppointmentModalOpen} selectedAppointment={selectedAppointment} setSuccessModalOpen={()=>{setSuccessModalOpen(true); setSuccessModalType("rescheduleAppointment")}} />
                     }
 
-                    {CancelAppointmentModal && selectedAppointment !== null &&
-                        <CancelAppointmentModal CancelAppointmentModalOpen={cancelAppointmentModalOpen} setCancelAppointmentOpen={setCancelAppointmentOpen} selectedAppointment={upcomingAppointments?.[selectedAppointment]} setSuccessModalOpen={()=>{setSuccessModalOpen(true); setSuccessModalType("cancelAppointment")}} />
+                    {cancelAppointmentModalOpen && selectedAppointment !== null &&
+                        <CancelAppointmentModal CancelAppointmentModalOpen={cancelAppointmentModalOpen} setCancelAppointmentOpen={setCancelAppointmentOpen} selectedAppointment={selectedAppointment} setSuccessModalOpen={()=>{setSuccessModalOpen(true); setSuccessModalType("cancelAppointment")}} />
                     }
                     <AddPhoneNumberModal phoneNumberModalOpen={phoneNumberModalOpen} setPhoneNumberModalOpen={setPhoneNumberModalOpen} setHavePhoneNumber={setHavePhoneNumber} setSuccessModalOpen={()=>{setSuccessModalOpen(true); setSuccessModalType("addPhoneNumber")}} />
-                    <SuccessModal type={successModalType} successModalOpen={successModalOpen} setSuccessModalOpen={setSuccessModalOpen} email={user.email} reload={true} />
+                    <SuccessModal type={successModalType} successModalOpen={successModalOpen} setSuccessModalOpen={setSuccessModalOpen} email={user.email} />
                 </div>
             }       
         </>

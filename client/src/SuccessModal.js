@@ -1,7 +1,7 @@
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { InformationCircleIcon } from '@heroicons/react/24/outline'
 
-export default function SuccessModal({ type, successModalOpen, setSuccessModalOpen, email=null, reload=false }){
+export default function SuccessModal({ type, successModalOpen, setSuccessModalOpen, email=null }){
   return (
     <div>
       <Dialog open={successModalOpen} onClose={()=>{}} className="relative z-10">
@@ -46,7 +46,7 @@ export default function SuccessModal({ type, successModalOpen, setSuccessModalOp
               <div className="bg-gray-700/25 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                 <button
                   type="button"
-                  onClick={()=>{setSuccessModalOpen(false); if(reload){window.location.reload()}}}
+                  onClick={()=>{setSuccessModalOpen(false)}}
                   data-autofocus
                   className="mt-3 inline-flex w-full justify-center rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white inset-ring inset-ring-white/5 hover:bg-white/20 sm:mt-0 sm:w-auto"
                 >

@@ -25,7 +25,7 @@ export default function CancelAppointmentModal({ CancelAppointmentModalOpen, set
 
         const today = new Date();
         const appointmentDate = new Date(selectedAppointment.date);
-        const diffDay = Math.floor((appointmentDate - today) / (1000 * 60 * 60 * 24));
+        const diffDay = Math.floor((appointmentDate - today) / (1000 * 60 * 60 * 24)); console.log(diffDay)
         if(diffDay < 1){
             setModalPage(0);
         };

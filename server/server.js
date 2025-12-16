@@ -29,7 +29,7 @@ var FacebookStrategy = require('passport-facebook').Strategy;
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
-    limit: 100,
+    limit: 500,
     standardHeaders: true, 
     legacyHeaders: true, 
     ipv6Subnet: 56, 
@@ -68,6 +68,14 @@ io.on("connection", (socket)=>{
     socket.to("customer").emit("appointmentCompleted", appointmentData);
   });
 
+  socket.on("rescheduleAppointment", function(appointmentData){
+    socket.to("customer").emit("rescheduleAppointment", appointmentData);
+  });
+
+  socket.on("cancelAppointment", function(appointmentData){
+    socket.to("customer").emit("cancelAppointment", appointmentData);
+  });
+
   socket.on("disconnect", ()=>{
     console.log("a user disconnect");
   });
@@ -101,9 +109,7 @@ app.post('/webhook', express.raw({type: 'application/json'}), async(request, res
         appointment.paymentStatus = "PAID";
         await appointment.save();
 
-        if(String(appointment.date).split("T")[0] !== new Date().toISOString().split("T")[0]){
-          io.emit("newAppointment", appointment);
-        }
+        io.emit("newAppointment", appointment);
         sendMakeAppointmentDetails(appointment, email);
       }
     } catch(err){
@@ -570,12 +576,10 @@ app.post("/appointment/makeAppointment", verifyUser, async(req,res)=>{
         const sessionURL = await stripePayment(service, appointmentId, customerEmail);
         return res.json({status: "success", message: sessionURL});
       } else{
-        const appointmentSend = await Appointment.findOne({_id: newAppointment._id}).populate("customerId", "username email").populate("serviceId", "name price").populate("staffId", "username email");
+        const appointmentSend = await Appointment.findOne({_id: newAppointment._id}).populate("customerId", "username email").populate("serviceId", "name price").populate("staffId", "_id username");
         sendMakeAppointmentDetails(appointmentSend, customerEmail);
 
-        if(date === new Date().toISOString().split("T")[0]){
-          io.emit("newAppointment", appointmentSend);
-        }
+        io.emit("newAppointment", appointmentSend);
         return res.json({status: "success"});
       }
       
@@ -600,6 +604,8 @@ app.put("/appointment/rescheduleAppointment", verifyUser, async(req,res)=>{
   try{
     const startedAt = timeslot.time.split("-")[0].trim();
     const endedAt = timeslot.time.split("-")[1].trim();
+    const startedAtDate = new Date(`${date}T${startedAt}:00.000Z`);
+    const endedAtDate = new Date(`${date}T${endedAt}:00.000Z`);
     const queueMin = timeslot.queueMin;
 
     if(id && timeslot && startedAt && endedAt){
@@ -617,14 +623,17 @@ app.put("/appointment/rescheduleAppointment", verifyUser, async(req,res)=>{
         date: date,
         startedAt: startedAt,
         endedAt: endedAt,
+        startedAtDate: startedAtDate,
+        endedAtDate: endedAtDate,
         queueMin: queueMin
       });
 
       if(appointmentReschedule){
         const appointment = await Appointment.findById(
           id
-        ).populate("customerId", "username email").populate("serviceId", "name price").populate("staffId", "username email");
+        ).populate("customerId", "username email").populate("serviceId", "name price").populate("staffId", "_id username");
         sendRescheduleAppointmentDetails(appointment, customerEmail);
+        io.emit("rescheduleAppointment", appointment);
         return res.json({status: "success"});
       } return res.json({status: "fail", message: "error"});
     }
@@ -638,10 +647,11 @@ app.delete("/appointment/cancelAppointment", verifyUser, async(req,res)=>{
   const customerEmail = req.user?.email;
   const {id} = req.body;
   try{
-    const appointmentFound = await Appointment.findById(id).populate("customerId", "username email").populate("serviceId", "name price").populate("staffId", "username email");
+    const appointmentFound = await Appointment.findById(id).populate("customerId", "username email").populate("serviceId", "name price").populate("staffId", "_id username");
     const appointmentDelete = await Appointment.findByIdAndDelete(id);
     if(appointmentDelete){
       sendDeleteAppointmentDetails(appointmentFound, customerEmail);
+      io.emit("cancelAppointment", appointmentFound)
       return res.json({status: "success"});
     } return res.json({status: "fail", message: "error"});
   } catch(err){
@@ -652,55 +662,103 @@ app.delete("/appointment/cancelAppointment", verifyUser, async(req,res)=>{
 
 app.get("/liveQueue", verifyUser, async(req, res)=>{
   try{
-    const appointmentsByBarber = await Appointment.aggregate([
+    // const appointmentsByBarber = await Appointment.aggregate([
+    //   {
+    //     $match: { date: new Date(new Date().toISOString().split("T")[0] + 'T00:00:00.000Z')}, // filter by today date
+    //   },
+    //   {
+    //     $lookup: { // left join User table
+    //       from: "users", // collection name
+    //       localField: "customerId", // take staffId from Appointment
+    //       foreignField: "_id", // find matching _id in Users
+    //       as: "customer" // field name
+    //     }
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "users",
+    //       localField: "staffId",
+    //       foreignField: "_id",
+    //       as: "staff"
+    //     }
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "services",
+    //       localField: "serviceId",
+    //       foreignField: "_id",
+    //       as: "service"
+    //     }
+    //   },
+    //   {
+    //     $unwind: "$customer" // convert customer data to object instead of array
+    //   },
+    //   {
+    //     $unwind: "$staff"
+    //   },
+    //   {
+    //     $unwind: "$service"
+    //   },
+    //   {
+    //     $sort: {"queueMin": 1}
+    //   },
+    //   {
+    //     $group: {
+    //       _id: "$staffId", // group by staffId
+    //       staff: {$first: "$staff"}, // keep staff info
+    //       appointments: {$push: "$$ROOT"}, // put data in a list
+    //       count: {$sum: 1} // add count
+    //     }
+    //   }
+    // ]);console.log(appointmentsByBarber)
+
+    const appointmentsByBarber = await User.aggregate([
       {
-        $match: { date: new Date(new Date().toISOString().split("T")[0] + 'T00:00:00.000Z')}, // filter by today date
+        $match: {role: "STAFF"} // fetch users that match the role "STAFF"
       },
       {
-        $lookup: { // left join User table
-          from: "users", // collection name
-          localField: "customerId", // take staffId from Appointment
-          foreignField: "_id", // find matching _id in Users
-          as: "customer" // field name
-        }
+        $lookup: { // go look at appointments collection for every staff
+          from: "appointments",
+          let: {staffId: "$_id"}, // take the staff Id and store in a variable called staffId
+          pipeline: [ // run a mini query inside a main query
+            {
+              $match: {
+                $expr: {
+                  $and: [ // both expressions need to match
+                    { $eq: ["$staffId", "$$staffId"] }, // the staffId need to match
+                    { $eq: ["$date", new Date("2025-12-08T00:00:00.000+00:00")] } // date of appointment need to match new Date().toISOString().split("T")[0] + 'T00:00:00.000Z'
+                  ]
+                }
+              }
+            },
+            {
+              $lookup: { // get all customer data of the 
+                from: "users",
+                foreignField: "_id",
+                localField: "customerId",
+                as: "customer"
+              }
+            },
+            {
+              $unwind: "$customer"
+            },
+            {
+              $lookup: {
+                from: "services",
+                foreignField: "_id",
+                localField: "serviceId",
+                as: "service"
+              }
+            },
+            {
+              $unwind: "$service"
+            },
+            { $sort: { "queueMin": 1 } }
+          ],
+          as: "appointments"
+        } 
       },
-      {
-        $lookup: {
-          from: "users",
-          localField: "staffId",
-          foreignField: "_id",
-          as: "staff"
-        }
-      },
-      {
-        $lookup: {
-          from: "services",
-          localField: "serviceId",
-          foreignField: "_id",
-          as: "service"
-        }
-      },
-      {
-        $unwind: "$customer" // convert customer data to object instead of array
-      },
-      {
-        $unwind: "$staff"
-      },
-      {
-        $unwind: "$service"
-      },
-      {
-        $sort: {"queueMin": 1}
-      },
-      {
-        $group: {
-          _id: "$staffId", // group by staffId
-          staff: {$first: "$staff"}, // keep staff info
-          appointments: {$push: "$$ROOT"}, // put data in a list
-          count: {$sum: 1} // add count
-        }
-      }
-    ]);console.log(appointmentsByBarber)
+    ]); console.log(appointmentsByBarber)
     return res.json({status: "success", message: appointmentsByBarber});
   } catch(err){
     console.log(err);
@@ -720,7 +778,7 @@ app.get("/staff/appointments", verifyStaff, async(req, res)=>{
 
     const allAppointments = await Appointment.find({
       staffId: staffId,
-      // date: dateObj
+      date: dateObj
     }).populate("customerId", "username").populate("serviceId", "name").sort({queueMin: 1});
 
     return res.json({status: "success", message: allAppointments});

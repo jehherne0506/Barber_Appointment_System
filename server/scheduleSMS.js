@@ -47,7 +47,7 @@ async function sendMessage(appointment){
       to: `whatsapp:${appointment?.customerId?.phoneNumber}`,
     });
 
-    console.log(message.body);
+    console.log(message);
   } catch(err){
     console.log(err);
   }
