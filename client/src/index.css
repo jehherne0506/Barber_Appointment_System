@@ -4,6 +4,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Geom:ital,wght@0,300..900;1,300..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=BBH+Hegarty&display=swap" rel="stylesheet');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -29,4 +30,20 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+@property --border-angle{
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes rotate-gradient{
+  to{
+    ---border-angle: 360deg;
+  }
+}
+
+.animate-gradient-spin{
+  animation: rotate-gradient 3s linear infinite;
 }

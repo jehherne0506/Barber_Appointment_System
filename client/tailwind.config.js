@@ -14,9 +14,13 @@ module.exports = {
         sans: ['Almendra', 'sans-serif'],
         roboto: ['"Roboto Mono"', 'sans-serif'],
         bartle: ['"BBH Bartle"', "sans-serif"],
+        hegarty: ['"BBH Hegarty', 'sans-serif'],
         robotoCondensed: ['"Roboto Condensed"', "sans-serif"],
         dela: ['"Dela Gothic One"', "sans-serif"],
         geom: ['Geom']
+      },
+      boxShadow: {
+        'glow-yellow': '0 0 20px 5px rgba(255, 193, 7, 0.3), 0 0 20px 10px rgba(255, 193, 7, 0.2)'
       },
       keyframes: {
         caroussel: {
@@ -31,10 +35,21 @@ module.exports = {
           '0%': { opacity: '0', transform: 'translateX(20px)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
+        gradientSpin: {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' }
+        },
+        livePop: {
+          '0%': { transform: 'scale(1.0)' },
+          '50%': { transform: 'scale(1.2)' },
+          '100%': { transform: 'scale(1.0)' }
+        }
       },
       animation: {
         'caroussel': 'caroussel 20s linear infinite',
         'fadeInSlide': 'fadeInSlide 1s ease-out forwards',
+        'gradientSpin': 'gradientSpin 3s linear infinite',
+        'livePop': 'livePop 1s linear infinite',
       }
     },
   },

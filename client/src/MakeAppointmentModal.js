@@ -1,6 +1,6 @@
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import toast, { Toaster } from 'react-hot-toast';
@@ -11,7 +11,6 @@ import fetchWithRateLimit from './fetchWithRateLimit';
 export default function MakeAppointmentModal({makeAppointmentModalOpen, setMakeAppointmentModalOpen, setSuccessModalOpen}){
     const navigate = useNavigate();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [user, setUser] = useState({id: null, username: null, email: null, role: null, avatar: null});
     const [allServices, setAllServices] = useState(null);
     const [allTimeslot, setAllTimeslot] = useState(null);
     const [serviceIdxSelected, setServiceIdxSelected] = useState(null);
@@ -20,6 +19,8 @@ export default function MakeAppointmentModal({makeAppointmentModalOpen, setMakeA
     const [timeslotSelectedIdx, setTimeslotSelectedIdx] = useState(null);
     const [reloadServicesTrigger, setReloadServicesTrigger] = useState(0);
     const [socket, setSocket] = useState(null);
+    
+    const userRef = useRef(null);
 
     const [modalPage, setModalPage] = useState(1);
 
@@ -34,7 +35,7 @@ export default function MakeAppointmentModal({makeAppointmentModalOpen, setMakeA
 
     useEffect(()=>{
         async function checkAuth() {
-            const { authenticated } = await checkAuthenticated(setIsAuthenticated, setUser);
+            const { authenticated } = await checkAuthenticated(setIsAuthenticated, userRef);
             if (!authenticated) {
                 navigate("/auth/login");
             }
@@ -94,7 +95,7 @@ export default function MakeAppointmentModal({makeAppointmentModalOpen, setMakeA
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({staffId: staffIdSelected, date: dateSelected, serviceDuration: allServices[serviceIdxSelected].durationBlock})
+                body: JSON.stringify({staffId: staffIdSelected, date: dateSelected, service: allServices[serviceIdxSelected]})
             });
 
             const result = await response.json();
@@ -131,7 +132,7 @@ export default function MakeAppointmentModal({makeAppointmentModalOpen, setMakeA
                 body: JSON.stringify({staffId: staffIdSelected, date: dateSelected, serviceId: allServices[serviceIdxSelected]?._id, timeslot: allTimeslot[timeslotSelectedIdx], paymentMethod: paymentMethod})
             });
 
-            const result = await response.json();
+            const result = await response.json(); console.log(result)
             if(result.status === "success"){ 
                 if(paymentMethod === "stripe"){
                     const stripeURL = result.message;
@@ -208,6 +209,7 @@ export default function MakeAppointmentModal({makeAppointmentModalOpen, setMakeA
                                                 )) :
                                                     <option disabled={true} value={null}>No Barber Available</option>    
                                                 }
+                                                <option value={"all"}>Any Staff</option>
                                             </select>
                                         </div>
                                         <div>

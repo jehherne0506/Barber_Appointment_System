@@ -1,6 +1,6 @@
 import fetchWithRateLimit from "./fetchWithRateLimit";
 
-export default async function checkAuthenticated(setIsAuthenticated, setUser){
+export default async function checkAuthenticated(setIsAuthenticated, userRef){
     async function refreshToken(){
         console.log("refresh")
         const response = await fetchWithRateLimit("http://localhost:5000/auth/refresh",  {
@@ -27,7 +27,7 @@ export default async function checkAuthenticated(setIsAuthenticated, setUser){
         if(result.status === "success"){console.log("successVerify")
             setIsAuthenticated(true);
             const {id, username, email, avatar, role} = result.message;
-            setUser({id, username, email, avatar, role});
+            userRef.current = {id, username, email, avatar, role};
             return ({authenticated: true, id: id});
         } else if(result.status === "fail" && result.message === "expired"){
             console.log("again")

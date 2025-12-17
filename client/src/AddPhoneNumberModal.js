@@ -1,6 +1,6 @@
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import 'react-phone-number-input/style.css'
@@ -12,7 +12,7 @@ import fetchWithRateLimit from './fetchWithRateLimit';
 
 export default function AddPhoneNumberModal({ phoneNumberModalOpen, setPhoneNumberModalOpen, setHavePhoneNumber, setSuccessModalOpen }){
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [user, setUser] = useState({id: null, username: null, email: null, role: null, avatar: null});
+    const userRef = useRef(null);
 
     const [phoneNumber, setPhoneNumber] = useState("");
     const [validPhoneNumber, setValidPhoneNumber] = useState(true);
@@ -21,7 +21,7 @@ export default function AddPhoneNumberModal({ phoneNumberModalOpen, setPhoneNumb
 
     useEffect(()=>{
         async function checkAuth() {
-            const { authenticated } = await checkAuthenticated(setIsAuthenticated, setUser);
+            const { authenticated } = await checkAuthenticated(setIsAuthenticated, userRef);
             if (!authenticated) {
                 navigate("/auth/login");
             }

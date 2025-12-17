@@ -29,6 +29,7 @@ export default function SuccessModal({ type, successModalOpen, setSuccessModalOp
                       {type === "rescheduleAppointment" && "Appointment Reschedule Successfully"}
                       {type === "cancelAppointment" && "Appointment Cancelled Successfully"}
                       {type === "addPhoneNumber" && "Phone Number added Successfully"}
+                      {type === "feedback" && "Feedback Made Successfully"}
                     </DialogTitle>
                     <div className="mt-2">
                       <p className="text-sm text-white">
@@ -38,6 +39,7 @@ export default function SuccessModal({ type, successModalOpen, setSuccessModalOp
                         {type === "rescheduleAppointment" && `We are delighted to confirm your recent reschedule of appointment. This confirmation signifies that your preferred time slot has been successfully reserved in our system, and all the specific appointment details have been sent to your email address, ${email}. `}
                         {type === "cancelAppointment" && `Your appointment has been successfully cancelled. A confirmation email has been sent to your email address, ${email}, containing the details of the cancellation. If this cancellation was unintentional, you may book a new appointment at your convenience.`}
                         {type === "addPhoneNumber" && "Your phone number has been added successfully. Don't worry - it will only be used to send a reminder SMS one hour prior to your appointment.."}
+                        {type === "feedback" && "Your feedback has been submitted successfully and will be reviewed by our team."}
                       </p>
                     </div>
                   </div>

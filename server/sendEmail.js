@@ -502,6 +502,103 @@ function generateCompletedAppointmentTemplate(appointment) {
     `;
 }
 
+function generateUserFeedbackTemplate(feedback) {
+    const { name, date, service, comment } = feedback;
+
+    const formattedDate = new Date(date).toLocaleDateString("en-MY", {
+        weekday: "short", year: "numeric", month: "short", day: "numeric",
+    });
+
+    return `
+    <div style="font-family: Arial, sans-serif; background:#f7f7f7; padding:20px;">
+      <div style="max-width:600px; margin:auto; background:#ffffff; padding:25px; border-radius:10px;">
+        
+        <h2 style="color:#27ae60;">Thank You for Your Feedback! 🌟</h2>
+
+        <p style="color:#444;">
+          Hi <strong>${name}</strong>,<br><br>
+          We truly appreciate you taking the time to share your feedback with us.
+        </p>
+
+        <table style="width:100%; margin-top:15px;">
+          <tr>
+            <td style="color:#777;">Service:</td>
+            <td><strong>${service}</strong></td>
+          </tr>
+          <tr>
+            <td style="color:#777;">Your Comment:</td>
+            <td><strong>${comment }</strong></td>
+          </tr>
+        </table>
+
+        <br>
+
+        <p style="color:#555;">
+          Your feedback helps us improve our service and provide a better experience for you.
+        </p>
+
+        <p style="font-size:13px; color:#aaa;">
+          Submitted on ${new Date(formattedDate).toLocaleString("en-MY")}
+        </p>
+
+        <p style="color:#27ae60; font-weight:bold;">— BuyLo Team</p>
+      </div>
+    </div>
+    `;
+}
+
+function generateAdminFeedbackNotificationTemplate(feedback) {
+    const { id, name, email, date, service, comment } = feedback;
+
+    const formattedDate = new Date(date).toLocaleDateString("en-MY", {
+        weekday: "short", year: "numeric", month: "short", day: "numeric",
+        hour: "2-digit", minute: "2-digit"
+    });
+
+    return `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f8; padding: 20px;">
+      <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 25px; border-left: 5px solid #34495e; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px;">
+            <h2 style="margin: 0; color: #2c3e50; font-size: 20px;">📢 New User Feedback</h2>
+            <span style="font-size: 12px; background: #ecf0f1; padding: 4px 8px; border-radius: 4px; color: #7f8c8d;">ID: ${id || 'N/A'}</span>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="padding: 10px 0; color: #7f8c8d; width: 100px;">User:</td>
+                <td style="padding: 10px 0; font-weight: 600; color: #2c3e50;">${name}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px 0; color: #7f8c8d;">Email:</td>
+                <td style="padding: 10px 0; color: #2980b9;">${email}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px 0; color: #7f8c8d;">Date:</td>
+                <td style="padding: 10px 0; color: #2c3e50;">${formattedDate}</td>
+            </tr>
+            <tr>
+            <td style="color:#777;">Service:</td>
+            <td><strong>${service}</strong></td>
+          </tr>
+        </table>
+
+        <div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 15px; border-radius: 6px; margin-top: 15px;">
+            <p style="margin: 0 0 5px 0; color: #95a5a6; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Message Content</p>
+            <p style="margin: 0; color: #34495e; line-height: 1.5; font-size: 15px;">
+                "${comment}"
+            </p>
+        </div>
+
+        <div style="margin-top: 25px; text-align: center;">
+            <a href="#" style="background: #34495e; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-size: 14px;">View in Admin Panel</a>
+        </div>
+      </div>
+    </div>
+    `;
+}
+
+
 async function sendMakeAppointmentDetails(appointment, email){
     try{
         await transporter.sendMail({
@@ -582,4 +679,28 @@ async function sendAppointmentCompleted(appointment, email){
     }
 }
 
-module.exports = {sendVerificationEmail, sendMakeAppointmentDetails, sendRescheduleAppointmentDetails, sendDeleteAppointmentDetails, sendAppointmentInProgress, sendAppointmentCompleted};
+async function sendFeedback(feedback, email){
+  try{console.log('send')
+        await transporter.sendMail({
+            from: '"BuyLo" <050607yjh@gmail.com>',
+            to: email,
+            subject: '🌟 Feedback Made Successfully!',
+            html: generateUserFeedbackTemplate(feedback),
+            text: "Feedback Made Successfully!"
+        });
+
+        await transporter.sendMail({
+            from: '"BuyLo" <050607yjh@gmail.com>',
+            to: '"BuyLo" <050607yjh@gmail.com>',
+            subject: '🌟 A User has Make a Feedback!',
+            html: generateAdminFeedbackNotificationTemplate(feedback),
+            text: "A User has Make a Feedback!"
+        });
+        return true;
+    } catch(err){
+        console.log(err);
+        return false;
+    }
+}
+
+module.exports = {sendVerificationEmail, sendMakeAppointmentDetails, sendRescheduleAppointmentDetails, sendDeleteAppointmentDetails, sendAppointmentInProgress, sendAppointmentCompleted, sendFeedback};

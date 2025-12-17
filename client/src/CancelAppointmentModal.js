@@ -1,21 +1,21 @@
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import checkAuthenticated from './checkAuthenticated';
 import fetchWithRateLimit from './fetchWithRateLimit';
 
-export default function CancelAppointmentModal({ CancelAppointmentModalOpen, setCancelAppointmentOpen, selectedAppointment, setSuccessModalOpen }){
+export default function CancelAppointmentModal({ CancelAppointmentModalOpen, setCancelAppointmentModalOpen, selectedAppointment, setSuccessModalOpen }){
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [user, setUser] = useState({id: null, username: null, email: null, role: null, avatar: null});
+    const userRef = useRef(null);
     const [modalPage, setModalPage] = useState(1);
 
     const navigate = useNavigate();
 
     useEffect(()=>{
         async function checkAuth() {
-            const { authenticated } = await checkAuthenticated(setIsAuthenticated, setUser);
+            const { authenticated } = await checkAuthenticated(setIsAuthenticated, userRef);
             if (!authenticated) {
                 navigate("/auth/login");
             }
@@ -44,7 +44,7 @@ export default function CancelAppointmentModal({ CancelAppointmentModalOpen, set
 
             const result = await response.json();
             if(result.status === "success"){ 
-                setCancelAppointmentOpen(false)
+                setCancelAppointmentModalOpen(false)
                 setSuccessModalOpen();
             } else if(result.status === "fail" && result.message === "auth"){
                 // auth modal
@@ -52,7 +52,7 @@ export default function CancelAppointmentModal({ CancelAppointmentModalOpen, set
             } else if(result.status === "fail" && result.message === "duplicate"){
                 // duplicate modal
             } else{
-                setCancelAppointmentOpen(false);
+                setCancelAppointmentModalOpen(false);
                 // error modal
             }
         };
@@ -74,13 +74,13 @@ export default function CancelAppointmentModal({ CancelAppointmentModalOpen, set
                         >
 
                         <button
-                            onClick={()=>{setCancelAppointmentOpen(false)}}
+                            onClick={()=>{setCancelAppointmentModalOpen(false)}}
                             className="absolute top-3 right-3 p-1 rounded-full hover:bg-blue-600 transition"
                         >
                             <XMarkIcon className="w-5 h-5 text-white" />
                         </button>
 
-                        <form onSubmit={()=>{setCancelAppointmentOpen(false)}}>
+                        <form onSubmit={()=>{setCancelAppointmentModalOpen(false)}}>
                             <div className="bg-blue-500 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                                 <div className="sm:flex sm:items-start">
                                 <div className="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-white sm:mx-0 sm:size-10">
@@ -129,7 +129,7 @@ export default function CancelAppointmentModal({ CancelAppointmentModalOpen, set
                         >
 
                         <button
-                            onClick={()=>{setCancelAppointmentOpen(false)}}
+                            onClick={()=>{setCancelAppointmentModalOpen(false)}}
                             className="absolute top-3 right-3 p-1 rounded-full hover:bg-blue-600 transition"
                         >
                             <XMarkIcon className="w-5 h-5 text-white" />
@@ -193,7 +193,7 @@ export default function CancelAppointmentModal({ CancelAppointmentModalOpen, set
                         >
 
                         <button
-                            onClick={()=>{setCancelAppointmentOpen(false)}}
+                            onClick={()=>{setCancelAppointmentModalOpen(false)}}
                             className="absolute top-3 right-3 p-1 rounded-full hover:bg-blue-600 transition"
                         >
                             <XMarkIcon className="w-5 h-5 text-white" />

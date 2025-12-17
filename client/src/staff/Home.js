@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -12,7 +12,6 @@ import ConfirmPaymentModal from "./ConfirmPaymentModal";
 
 export default function StaffHome(){
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [user, setUser] = useState({id: null, username: null, email: null, role: null, avatar: null});
     const [inProgressAppointments, setInProgressApointments] = useState(null);
     const [pendingAppointments, setPendingAppointments] = useState(null);
     const [completedAppointments, setCompletedAppointments] = useState(null);
@@ -22,11 +21,13 @@ export default function StaffHome(){
     const [confirmPaymentModalOpen, setConfirmPaymentModalOpen] = useState(false);
     const [confirmPaymentAppointment, setConfirmPaymentAppointment] = useState(null);
 
+    const userRef = useRef(null);
+
     const navigate = useNavigate();
 
     useEffect(()=>{
         async function checkAuth() {
-            const { authenticated } = await checkAuthenticated(setIsAuthenticated, setUser);
+            const { authenticated } = await checkAuthenticated(setIsAuthenticated, userRef);
             if (!authenticated) {
                 // auth modal
                 navigate("/auth/login");

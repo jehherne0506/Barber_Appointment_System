@@ -1,23 +1,24 @@
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import checkAuthenticated from './checkAuthenticated';
 
 export default function RescheduleAppointmentModal({ rescheduleAppointmentModalOpen, setRescheduleAppointmentModalOpen, selectedAppointment, setSuccessModalOpen }){
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [user, setUser] = useState({id: null, username: null, email: null, role: null, avatar: null});
     const [modalPage, setModalPage] = useState(1);
     const [dateSelected, setDateSelected] = useState(selectedAppointment?.date.split("T")[0]);
     const [allTimeslot, setAllTimeslot] = useState(null);
     const [timeslotSelectedIdx, setTimeslotSelectedIdx] = useState(null);
 
+    const userRef = useRef(null);
+
     const navigate = useNavigate();
 
     useEffect(()=>{
         async function checkAuth() {
-            const { authenticated } = await checkAuthenticated(setIsAuthenticated, setUser);
+            const { authenticated } = await checkAuthenticated(setIsAuthenticated, userRef);
             if (!authenticated) {
                 navigate("/auth/login");
             }
@@ -41,11 +42,11 @@ export default function RescheduleAppointmentModal({ rescheduleAppointmentModalO
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({staffId: selectedAppointment?.staffId, date: dateSelected, serviceDuration: selectedAppointment?.serviceId.durationBlock})
+                    body: JSON.stringify({staffId: selectedAppointment?.staffId, date: dateSelected, service: selectedAppointment?.serviceId})
                 });
     
                 const result = await response.json();
-                if(result.status === "success"){
+                if(result.status === "success"){console.log(result)
                     if(dateSelected === selectedAppointment.date.split("T")[0]){
                         result.message.push({time: selectedAppointment?.startedAt + " - " + selectedAppointment?.endedAt, queueMin: ""});
                         setTimeslotSelectedIdx(result.message.length - 1);

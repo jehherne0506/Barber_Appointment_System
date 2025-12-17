@@ -1,19 +1,21 @@
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 
 import checkAuthenticated from '../checkAuthenticated';
 
 export default function ConfirmPaymentModal({ confirmPaymentModalOpen, setConfirmPaymentModalOpen, appointment, handleAppointmentToCompleted }){
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [user, setUser] = useState({id: null, username: null, email: null, role: null, avatar: null});
     const [modalPage, setModalPage] = useState(1);
+
+    const userRef = useRef(null);
+
     const navigate = useNavigate();
 
     useEffect(()=>{
         async function checkAuth() {
-            const { authenticated } = await checkAuthenticated(setIsAuthenticated, setUser);
+            const { authenticated } = await checkAuthenticated(setIsAuthenticated, userRef);
             if (!authenticated) {
                 navigate("/auth/login");
             }

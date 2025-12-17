@@ -16,10 +16,11 @@ const User = require("./models/user");
 const Service = require("./models/service");
 const Appointment = require("./models/appointment");
 const UnavailableTimeslot = require("./models/unavailableTimeslot");
+const Feedback = require("./models/feedback");
 
 const connectMongoose = require('./connectMongoose');
 const generateCookie = require('./generateCookie');
-const {sendVerificationEmail, sendMakeAppointmentDetails, sendRescheduleAppointmentDetails, sendDeleteAppointmentDetails, sendAppointmentInProgress, sendAppointmentCompleted} = require('./sendEmail');
+const {sendVerificationEmail, sendMakeAppointmentDetails, sendRescheduleAppointmentDetails, sendDeleteAppointmentDetails, sendAppointmentInProgress, sendAppointmentCompleted, sendFeedback} = require('./sendEmail');
 const {verifyUser, verifyStaff, verifyAdmin} = require('./auth');
 const generateTimeslot = require('./generateTimeslot');
 const stripePayment = require('./stripePayment');
@@ -414,6 +415,88 @@ app.post('/auth/login', async(req,res)=>{
   }
 });
 
+app.post('/feedback', verifyUser, async(req,res)=>{
+  const {name, email, date, service, comment} = req.body;
+  try{
+    const customer = await User.findOne({email: email});
+    const serviceId = await Service.findOne({name: service});
+    if(serviceId){
+      let newFeedback;
+      if(customer){
+        newFeedback = await Feedback({
+          customerId: customer._id,
+          date: date,
+          serviceId: serviceId,
+          comment: comment
+        }); 
+      } else{
+        newFeedback = await Feedback({
+          date: date,
+          service: serviceId,
+          comment: comment
+        }); 
+      };
+
+      await newFeedback.save();
+
+      const feedbackDetails = {
+        id: newFeedback._id,
+        name: name,
+        email: email,
+        date: date,
+        serviceId: serviceId,
+        comment: comment
+      }
+      await sendFeedback(feedbackDetails, email);
+      return res.json({status: "success"})
+    } return res.json({status: "fail", message: "error"});
+  } catch(err){
+    console.log(err);
+    return res.json({status: "fail", message: "error"});
+  }
+});
+
+app.get('/appointmentStats', verifyUser, async(req,res)=>{ // fetch num of upcoming, past appointments. total money spent, days since last appointment
+  const userId = req.user?.id;
+
+  if(!userId){
+    return res.json({status: "fail", message: "auth"});
+  }
+
+  try{
+    let totalMoneySpent = 0;
+    let lastAppointmentDate = "-";
+      const dateObj = new Date(new Date().toISOString().split("T")[0] + 'T00:00:00.000Z');
+      const upcomingAppointments = await Appointment.find({
+        customerId: userId,
+        date: {
+          $gte: dateObj
+        }
+      }).populate("serviceId", "price");
+
+      const pastAppointments = await Appointment.find({
+        customerId: userId,
+        date: {
+          $lt: dateObj
+        }
+      }).sort({"date": -1}).populate("serviceId", "price");
+
+      if(upcomingAppointments.length !== 0 || pastAppointments.length !== 0){
+        const upcomingAppointmentsCost = upcomingAppointments.reduce((acc,currentAppointment)=> acc + currentAppointment.serviceId?.price || 0, 0);
+        const pastAppointmentsCost = pastAppointments.reduce((acc,currentAppointment)=> acc + currentAppointment.serviceId?.price || 0, 0);
+        totalMoneySpent = upcomingAppointmentsCost + pastAppointmentsCost;
+        if(pastAppointments.length > 0){
+          lastAppointmentDate = Math.floor((dateObj - new Date(pastAppointments[0].date)) / (24 * 60 * 60 * 1000));
+        }
+      }
+
+      return res.json({status: "success", message: {upcomingAppointmentsCount: upcomingAppointments.length, pastAppointmentsCount: pastAppointments.length, totalMoneySpent, lastAppointmentDate}});
+  } catch(err){
+    console.log(err);
+    return res.json({status: "fail", message: "error"});
+  }
+});
+
 app.get('/havePhoneNumber', verifyUser, async(req,res)=>{
   const userId = req.user?.id;
 
@@ -489,36 +572,69 @@ app.get("/appointment/services", verifyUser, async(req,res)=>{
 });
 
 app.post("/appointment/timeslot", verifyUser, async(req,res)=>{
-  const { staffId, date, serviceDuration } = req.body; 
+  const { staffId, date, service } = req.body; 
 
   try{
+    const serviceDuration = service.durationBlock;
     const dateObj = new Date(date + 'T00:00:00.000Z');
-    const allAppointments = await Appointment.find({
+    let allAvailableTimeslot = []
+
+    if(staffId === "all"){
+    const serviceFound = await Service.findOne({_id: service._id})
+    const allStaffs = serviceFound.staff
+    for(const staffId of allStaffs){
+      const allAppointments = await Appointment.find({
       staffId: staffId,
       date: dateObj
-    });
+      });
 
-    const allUnavailableTimeslot = await UnavailableTimeslot.find({
-      staffId: staffId,
-      date: dateObj
-    }); 
+      const allUnavailableTimeslot = await UnavailableTimeslot.find({
+        staffId: staffId,
+        date: dateObj
+      }); 
 
-    const timeslot = generateTimeslot(date, allAppointments, allUnavailableTimeslot)
+      const timeslot = generateTimeslot(date, allAppointments, allUnavailableTimeslot);
 
-    let allAvailableTimeslot = [];
-    for(let i=0; i<(timeslot.length - serviceDuration); i++){
-      let availableTimeslot = true; 
-      for(let y=0; y<serviceDuration; y++){
-        if(timeslot[i+y].time === ""){
-          availableTimeslot = false;
+      for(let i=0; i<(timeslot.length - serviceDuration); i++){
+        let availableTimeslot = true; 
+        for(let y=0; y<serviceDuration; y++){
+          if(timeslot[i+y].time === ""){
+            availableTimeslot = false;
+          };
         };
-      }; 
-
-      if(availableTimeslot){ 
-        allAvailableTimeslot.push({time: `${timeslot[i].time.split("-")[0].trim()} - ${timeslot[i+serviceDuration-1].time.split("-")[1].trim()}`, queueMin: timeslot[i].queueMin});
-        i += serviceDuration - 1;
+        if(availableTimeslot && !allAvailableTimeslot.find(availableTimeslot => availableTimeslot.queueMin === timeslot[i].queueMin)){ 
+          allAvailableTimeslot.push({time: `${timeslot[i].time.split("-")[0].trim()} - ${timeslot[i+serviceDuration-1].time.split("-")[1].trim()}`, queueMin: timeslot[i].queueMin});
+          i += serviceDuration - 1;
+        } 
       }
-    }console.log(allAvailableTimeslot);console.log(timeslot)
+    }
+  } else{
+      const allAppointments = await Appointment.find({
+        staffId: staffId,
+        date: dateObj
+      });
+
+      const allUnavailableTimeslot = await UnavailableTimeslot.find({
+        staffId: staffId,
+        date: dateObj
+      }); 
+
+      const timeslot = generateTimeslot(date, allAppointments, allUnavailableTimeslot)
+
+      for(let i=0; i<(timeslot.length - serviceDuration); i++){
+        let availableTimeslot = true; 
+        for(let y=0; y<serviceDuration; y++){
+          if(timeslot[i+y].time === ""){
+            availableTimeslot = false;
+          };
+        }; 
+
+        if(availableTimeslot){ 
+          allAvailableTimeslot.push({time: `${timeslot[i].time.split("-")[0].trim()} - ${timeslot[i+serviceDuration-1].time.split("-")[1].trim()}`, queueMin: timeslot[i].queueMin});
+          i += serviceDuration - 1;
+        }
+      }
+    }
 
     return res.json({status: "success", message: allAvailableTimeslot});
   } catch(err){
@@ -547,7 +663,8 @@ app.post("/appointment/makeAppointment", verifyUser, async(req,res)=>{
     if(customerId && serviceId && staffId && date && startedAt && endedAt){
       const hasDuplicateAppointment = await Appointment.findOne({
         date: date,
-        startedAt: startedAt
+        startedAt: startedAt,
+        staffId: staffId
       });
 
       if(hasDuplicateAppointment){
@@ -662,56 +779,6 @@ app.delete("/appointment/cancelAppointment", verifyUser, async(req,res)=>{
 
 app.get("/liveQueue", verifyUser, async(req, res)=>{
   try{
-    // const appointmentsByBarber = await Appointment.aggregate([
-    //   {
-    //     $match: { date: new Date(new Date().toISOString().split("T")[0] + 'T00:00:00.000Z')}, // filter by today date
-    //   },
-    //   {
-    //     $lookup: { // left join User table
-    //       from: "users", // collection name
-    //       localField: "customerId", // take staffId from Appointment
-    //       foreignField: "_id", // find matching _id in Users
-    //       as: "customer" // field name
-    //     }
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "users",
-    //       localField: "staffId",
-    //       foreignField: "_id",
-    //       as: "staff"
-    //     }
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "services",
-    //       localField: "serviceId",
-    //       foreignField: "_id",
-    //       as: "service"
-    //     }
-    //   },
-    //   {
-    //     $unwind: "$customer" // convert customer data to object instead of array
-    //   },
-    //   {
-    //     $unwind: "$staff"
-    //   },
-    //   {
-    //     $unwind: "$service"
-    //   },
-    //   {
-    //     $sort: {"queueMin": 1}
-    //   },
-    //   {
-    //     $group: {
-    //       _id: "$staffId", // group by staffId
-    //       staff: {$first: "$staff"}, // keep staff info
-    //       appointments: {$push: "$$ROOT"}, // put data in a list
-    //       count: {$sum: 1} // add count
-    //     }
-    //   }
-    // ]);console.log(appointmentsByBarber)
-
     const appointmentsByBarber = await User.aggregate([
       {
         $match: {role: "STAFF"} // fetch users that match the role "STAFF"
@@ -726,7 +793,7 @@ app.get("/liveQueue", verifyUser, async(req, res)=>{
                 $expr: {
                   $and: [ // both expressions need to match
                     { $eq: ["$staffId", "$$staffId"] }, // the staffId need to match
-                    { $eq: ["$date", new Date("2025-12-08T00:00:00.000+00:00")] } // date of appointment need to match new Date().toISOString().split("T")[0] + 'T00:00:00.000Z'
+                    { $eq: ["$date", new Date(new Date().toISOString().split("T")[0] + 'T00:00:00.000Z')] } // date of appointment need to match new Date().toISOString().split("T")[0] + 'T00:00:00.000Z'
                   ]
                 }
               }
