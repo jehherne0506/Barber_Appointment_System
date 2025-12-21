@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 import { BiLogoFacebook } from "react-icons/bi";
 import { FaInstagram } from "react-icons/fa";
@@ -13,7 +13,7 @@ import L from 'leaflet';
 import checkAuthenticated from './checkAuthenticated';
 import fetchWithRateLimit from './fetchWithRateLimit';
 import SuccessModal from './SuccessModal';
-import Header from "./Header";
+import ErrorModal from "./ErrorModal";
 
 import logoTransparent from "./public/logoTransparent.png";
 import logoHuman from "./public/logoHuman.webp";
@@ -89,6 +89,8 @@ export default function Home(){
 
     const [successModalOpen, setSuccessModalOpen] = useState(false);
 
+    const [errorModalOpen, setErrorModalOpen] = useState(false);
+
     const feedbackName = useRef(null);
     const feedbackEmail = useRef(null);
     const feedbackDate = useRef(null);
@@ -101,8 +103,7 @@ export default function Home(){
         async function checkAuth() {
             const { authenticated } = await checkAuthenticated(setIsAuthenticated, userRef);
             if (!authenticated) {
-                // auth modal
-                navigate("/auth/login");
+                navigate("/auth/login", {state: {errorModalOpen: true}});
             }
         }
         checkAuth();
@@ -135,13 +136,12 @@ export default function Home(){
                 feedbackComment.current.value = null;
                 setSuccessModalOpen(true);
             } else if(result.status === "fail" && result.message === "auth"){
-                // auth modal
-                navigate("/auth/login");
+                navigate("/auth/login", {state: {errorModalOpen: true}});
             } else{
-                // error modal
+                setErrorModalOpen(true);
             }
         } else{
-            // error modal
+            setErrorModalOpen(true);
         }
     };
 
@@ -158,13 +158,11 @@ export default function Home(){
                             <img className="w-14" src={logoHuman} alt="Logo" />
                         </div>
                         <div className="hidden lg:flex gap-10 items-center">
-                            <a className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Home</a>
-                            <a className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">About</a>
-                            <a className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Services</a>
+                            <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out" to="/">Home</Link>
+                            <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">About</Link>
                             <img className="w-20" src={logoHuman} alt="Logo" />
-                            <a className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Pricing</a>
-                            <a className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Barber</a>
-                            <a className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Contact</a>
+                            <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out" to="/appointment">Appointment</Link>
+                            <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Profile</Link>
                         </div>
                         <div className="flex gap-3 items-center text-black lg:text-white">
                             <FaInstagram className="w-5 cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out" onClick={()=>{window.open("https://instagram.com")}} />
@@ -192,12 +190,12 @@ export default function Home(){
                     <div className="text-white flex flex-col flex-grow justify-center items-center px-8 gap-6 relative z-0">
                         <h1 className="font-roboto font-bold text-2xl sm:text-3xl ">Malaysia Popular Barber</h1>
                         <h1 className="font-bartle text-3xl lg:text-4xl">Talented men's <br></br> barber studio</h1>
-                        <button className="group relative overflow-hidden w-fit bg-white text-black font-sans gap-2 font-bold rounded-md">
+                        <button className="group relative overflow-hidden w-fit bg-white text-black font-sans gap-2 font-bold rounded-md" onClick={()=>{navigate("/makeAppointment")}}>
                                 <div className="flex items-center gap-2 transition-transform duration-500 ease-in-out p-6 group-hover:-translate-y-full">
                                     <img className="w-5" src={calendar} alt="Calendar Icon" />
                                     <p>Online Appointment</p>
                                 </div>
-                                <div className="absolute inset-0 flex items-center justify-center gap-2 translate-y-full transition-transform duration-500 ease-in-out p-6 group-hover:translate-y-0" onClick={()=>{navigate("/appointment")}}>
+                                <div className="absolute inset-0 flex items-center justify-center gap-2 translate-y-full transition-transform duration-500 ease-in-out p-6 group-hover:translate-y-0">
                                     <img className="w-5 group-hover:translate-y-0" src={calendar} alt="Calendar Icon" />
                                     <p>Online Appointment</p>
                                 </div>
@@ -646,6 +644,7 @@ export default function Home(){
                     <p className="text-gray-500">© 2025 The Fade Hub is proudly powered by <span className="text-white underline underline-offset-4">Yeoh Jeh Herne</span></p>
                 </div>
                 <SuccessModal type="feedback" successModalOpen={successModalOpen} setSuccessModalOpen={setSuccessModalOpen} />
+                <ErrorModal type="error" errorModalOpen={errorModalOpen} setErrorModalOpen={setErrorModalOpen} />
             </div> }
         </>
     )

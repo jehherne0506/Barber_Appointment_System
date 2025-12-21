@@ -403,9 +403,9 @@ app.post('/auth/login', async(req,res)=>{
         console.log("generated")
         return res.json({status: "success", role: user.role});
       }
-      return res.json({status: "fail", message: "error"});
+      return res.json({status: "fail", message: "passwordNotMatch"});
     } else if(user && !user.emailVerified){
-      return res.json({status: "fail", message: "email not verified"});
+      return res.json({status: "fail", message: "emailNotVerified"});
     } else{
       return res.json({status: "fail", message: "error"});
     }
@@ -572,47 +572,48 @@ app.get("/appointment/services", verifyUser, async(req,res)=>{
 });
 
 app.post("/appointment/timeslot", verifyUser, async(req,res)=>{
-  const { staffId, date, service } = req.body; 
+  const { staffId, date, service } = req.body; console.log(req.body)
 
   try{
     const serviceDuration = service.durationBlock;
-    const dateObj = new Date(date + 'T00:00:00.000Z');
+    const dateString = new Date(date).toISOString().split("T")[0]; 
+    const dateObj = new Date(dateString + 'T00:00:00.000Z');
     let allAvailableTimeslot = []
 
-    if(staffId === "all"){
-    const serviceFound = await Service.findOne({_id: service._id})
-    const allStaffs = serviceFound.staff
-    for(const staffId of allStaffs){
-      const allAppointments = await Appointment.find({
-      staffId: staffId,
-      date: dateObj
-      });
-
-      const allUnavailableTimeslot = await UnavailableTimeslot.find({
-        staffId: staffId,
+    if(staffId === "any"){
+      const serviceFound = await Service.findOne({_id: service._id})
+      const allStaffs = serviceFound.staff;
+      for(const eachStaffId of allStaffs){
+        const allAppointments = await Appointment.find({
+        staffId: eachStaffId,
         date: dateObj
-      }); 
+        });console.log("allAppointment");console.log(allAppointments)
 
-      const timeslot = generateTimeslot(date, allAppointments, allUnavailableTimeslot);
+        const allUnavailableTimeslot = await UnavailableTimeslot.find({
+          staffId: eachStaffId,
+          date: dateObj
+        }); 
 
-      for(let i=0; i<(timeslot.length - serviceDuration); i++){
-        let availableTimeslot = true; 
-        for(let y=0; y<serviceDuration; y++){
-          if(timeslot[i+y].time === ""){
-            availableTimeslot = false;
+        const timeslot = generateTimeslot(date, allAppointments, allUnavailableTimeslot);
+
+        for(let i=0; i<(timeslot.length - serviceDuration); i++){
+          let availableTimeslot = true; 
+          for(let y=0; y<serviceDuration; y++){
+            if(timeslot[i+y].time === ""){
+              availableTimeslot = false;
+            };
           };
-        };
-        if(availableTimeslot && !allAvailableTimeslot.find(availableTimeslot => availableTimeslot.queueMin === timeslot[i].queueMin)){ 
-          allAvailableTimeslot.push({time: `${timeslot[i].time.split("-")[0].trim()} - ${timeslot[i+serviceDuration-1].time.split("-")[1].trim()}`, queueMin: timeslot[i].queueMin});
-          i += serviceDuration - 1;
-        } 
+          if(availableTimeslot && !allAvailableTimeslot.find(availableTimeslot => availableTimeslot.queueMin === timeslot[i].queueMin)){ 
+            allAvailableTimeslot.push({time: `${timeslot[i].time.split("-")[0].trim()} - ${timeslot[i+serviceDuration-1].time.split("-")[1].trim()}`, queueMin: timeslot[i].queueMin});
+            i += serviceDuration - 1;
+          } 
+        }
       }
-    }
   } else{
       const allAppointments = await Appointment.find({
         staffId: staffId,
         date: dateObj
-      });
+      }); console.log("all");console.log(allAppointments)
 
       const allUnavailableTimeslot = await UnavailableTimeslot.find({
         staffId: staffId,
@@ -644,7 +645,9 @@ app.post("/appointment/timeslot", verifyUser, async(req,res)=>{
 });
 
 app.post("/appointment/makeAppointment", verifyUser, async(req,res)=>{
-  const { staffId, date, serviceId, timeslot, paymentMethod } = req.body;
+  let { staffId, date, serviceId, timeslot, paymentMethod } = req.body;
+  const dateString = new Date(date).toISOString().split("T")[0]; 
+  const dateObj = new Date(new Date(dateString).toISOString().split("T")[0] + 'T00:00:00.000Z');
   const customerId = req.user?.id;
   const customerEmail = req.user?.email;
 
@@ -654,28 +657,57 @@ app.post("/appointment/makeAppointment", verifyUser, async(req,res)=>{
 
   try{
     const startedAt = timeslot.time.split("-")[0].trim();
-    const endedAt = timeslot.time.split("-")[1].trim();console.log(date);console.log(startedAt)
+    const endedAt = timeslot.time.split("-")[1].trim();console.log(dateObj);console.log(startedAt)
 
-    const startedAtDate = new Date(`${date}T${startedAt}:00.000Z`);
-    const endedAtDate = new Date(`${date}T${endedAt}:00.000Z`);
+    const startedAtDate = new Date(`${dateString}T${startedAt}:00.000Z`);
+    const endedAtDate = new Date(`${dateString}T${endedAt}:00.000Z`);
     const queueMin = timeslot.queueMin;
 
-    if(customerId && serviceId && staffId && date && startedAt && endedAt){
-      const hasDuplicateAppointment = await Appointment.findOne({
-        date: date,
-        startedAt: startedAt,
-        staffId: staffId
-      });
+    if(customerId && serviceId && staffId && dateObj && startedAt && endedAt){
+      if(staffId === "any"){
+        const serviceFound = await Service.findOne({
+          _id: serviceId
+        }); console.log(serviceFound.staff)
 
-      if(hasDuplicateAppointment){
-        return res.json({status: "fail", message: "duplicate"});
+        const allStaffIds = serviceFound.staff;
+
+        let selectedStaffId = null;
+        for(let staffIdFound of allStaffIds){
+          const appointmentFound = await Appointment.findOne({
+            date: dateObj,
+            staffId: staffIdFound,
+            $or: [
+              {
+                startedAtDate: {$lt: endedAtDate},
+                endedAtDate: {$gt: startedAtDate},
+              }
+            ]
+          });
+          if(!appointmentFound){
+            staffId = staffIdFound;
+            break;
+          }
+        }
+        if(staffId === "any"){
+          return res.json({status: "fail", message: "duplicate"});
+        }
+      } else{
+        const hasDuplicateAppointment = await Appointment.findOne({
+          date: dateObj,
+          startedAt: startedAt,
+          staffId: staffId
+        });
+
+        if(hasDuplicateAppointment){
+          return res.json({status: "fail", message: "duplicate"});
+        }
       }
 
       const newAppointment = Appointment({
         customerId,
         serviceId,
-        staffId, 
-        date, 
+        staffId: staffId, 
+        date: dateObj, 
         startedAtDate,
         endedAtDate,
         startedAt,
@@ -716,18 +748,20 @@ app.get("/appointment/paymentFailure", async(req,res)=>{
 });
 
 app.put("/appointment/rescheduleAppointment", verifyUser, async(req,res)=>{
-  const customerEmail = req.user?.email;
-  const {id, date, timeslot} = req.body;
+  const customerEmail = req.user?.email; console.log(customerEmail)
+  const {id, date, timeslot} = req.body; console.log(req.body)
   try{
+    const dateString = new Date(date).toISOString().split("T")[0]; 
+    const dateObj = new Date(new Date(dateString).toISOString().split("T")[0] + 'T00:00:00.000Z')
     const startedAt = timeslot.time.split("-")[0].trim();
     const endedAt = timeslot.time.split("-")[1].trim();
-    const startedAtDate = new Date(`${date}T${startedAt}:00.000Z`);
-    const endedAtDate = new Date(`${date}T${endedAt}:00.000Z`);
+    const startedAtDate = new Date(`${dateString}T${startedAt}:00.000Z`);
+    const endedAtDate = new Date(`${dateString}T${endedAt}:00.000Z`);
     const queueMin = timeslot.queueMin;
 
     if(id && timeslot && startedAt && endedAt){
        const hasDuplicateAppointment = await Appointment.findOne({
-        date: date,
+        date: dateObj,
         startedAt: startedAt
       });
 
@@ -737,7 +771,7 @@ app.put("/appointment/rescheduleAppointment", verifyUser, async(req,res)=>{
 
       const appointmentReschedule = await Appointment.findByIdAndUpdate(
         id, {
-        date: date,
+        date: dateObj,
         startedAt: startedAt,
         endedAt: endedAt,
         startedAtDate: startedAtDate,

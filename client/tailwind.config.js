@@ -43,7 +43,7 @@ module.exports = {
           '0%': { transform: 'scale(1.0)' },
           '50%': { transform: 'scale(1.2)' },
           '100%': { transform: 'scale(1.0)' }
-        }
+        },
       },
       animation: {
         'caroussel': 'caroussel 20s linear infinite',

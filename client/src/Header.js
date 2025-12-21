@@ -23,11 +23,9 @@ export default function Header({ isOpenHamburgerMenu, setOpenHamburgerMenu, home
                 <div className="hidden lg:flex gap-10 items-center">
                     <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out" to="/">Home</Link>
                     <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">About</Link>
-                    <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Services</Link>
                     <img className="w-20" src={logoHuman} alt="Logo" />
-                    <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Pricing</Link>
-                    <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Barber</Link>
-                    <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Contact</Link>
+                    <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out" to="/appointment">Appointment</Link>
+                    <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Profile</Link>
                 </div>
                 <div className="flex gap-3 items-center text-black lg:text-white">
                     <FaInstagram className="w-5 cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out" onClick={()=>{window.open("https://instagram.com")}} />

@@ -24,7 +24,7 @@ function generateOriginalTimeslot(date){
     const WORK_END = 17 * 60;
     const INTERVAL = 15;
 
-    if(date === todayDate){
+    if(date.split("T")[0] === todayDate){console.log('same date')
         const HOUR = new Date().getHours();
         const MIN = new Date().getMinutes();
         let time = HOUR * 60 + MIN;

@@ -1,9 +1,9 @@
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { XMarkIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
 
-export default function SuccessModal({ type, successModalOpen, setSuccessModalOpen, email=null }){
-  return (
-        <Dialog open={successModalOpen} onClose={() => setSuccessModalOpen(false)} className="relative z-50">
+export default function ErrorModal({ errorModalOpen, setErrorModalOpen, type }){
+    return (
+        <Dialog open={errorModalOpen} onClose={() => setErrorModalOpen(false)} className="relative z-50">
             <DialogBackdrop
                 transition
                 className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
@@ -18,7 +18,7 @@ export default function SuccessModal({ type, successModalOpen, setSuccessModalOp
                         <div className="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                             <button
                                 type="button"
-                                onClick={() => setSuccessModalOpen(false)}
+                                onClick={() => setErrorModalOpen(false)}
                                 className="rounded-md bg-neutral-900 text-neutral-400 hover:text-white focus:outline-none"
                             >
                                 <span className="sr-only">Close</span>
@@ -28,38 +28,26 @@ export default function SuccessModal({ type, successModalOpen, setSuccessModalOp
 
                         <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                             <div className="sm:flex sm:items-start">
-                                <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-900/30 sm:mx-0 sm:h-10 sm:w-10">
-                                    <CheckCircleIcon aria-hidden="true" className="h-6 w-6 text-green-500" />
+                                <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-900/30 sm:mx-0 sm:h-10 sm:w-10">
+                                    <CheckCircleIcon aria-hidden="true" className="h-6 w-6 text-red-500" />
                                 </div>
 
                                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                                     <DialogTitle as="h3" className="text-xl font-geom font-semibold leading-6 text-white tracking-wide">
-                                        {type === "emailVerification" && "Email Sent"}
-                                        {type === "loginSuccess" && "Welcome Back"}
-                                        {type === "makeAppointment" && "Booking Confirmed"}
-                                        {type === "rescheduleAppointment" && "Reschedule Successful"}
-                                        {type === "cancelAppointment" && "Cancellation Confirmed"}
-                                        {type === "addPhoneNumber" && "Phone Number Saved"}
-                                        {type === "feedback" && "Thank You"}
+                                       {type === "auth" && "You are Not Authenticated."}
+                                       {type === "error" && "An Error has Occured."}
+                                       {type === "emailNotVerified" && "Email not Registered."}
+                                       {type === "passwordNotMatch" && "Incorrect Password."}
+                                       {type === "duplicate" && "Duplicate Booking Occured."}
                                     </DialogTitle>
                                     
                                     <div className="mt-2">
                                         <p className="text-sm text-neutral-400 font-robotoCondensed leading-relaxed">
-                                            {type === "emailVerification" && (
-                                                <>We have sent a verification link to <span className="text-white font-bold">{email}</span>. Please check your inbox to activate your account.</>
-                                            )}
-                                            {type === "loginSuccess" && "You have successfully logged in. Welcome to Precision Cuts."}
-                                            {type === "makeAppointment" && (
-                                                <>Your appointment has been successfully booked. A confirmation email has been sent to <span className="text-white">{email}</span>.</>
-                                            )}
-                                            {type === "rescheduleAppointment" && (
-                                                <>Your appointment has been updated to the new time slot. Details have been sent to <span className="text-white">{email}</span>.</>
-                                            )}
-                                            {type === "cancelAppointment" && (
-                                                <>Your appointment has been cancelled. A confirmation of this cancellation has been sent to <span className="text-white">{email}</span>.</>
-                                            )}
-                                            {type === "addPhoneNumber" && "Your phone number has been updated. You will now receive SMS reminders for your appointments."}
-                                            {type === "feedback" && "We appreciate your feedback! Your comments have been submitted to our team."}
+                                            {type === "auth" && "Please login again."}
+                                            {type === "error" && "Please try again as our server face an unexpected Error."}
+                                            {type === "emailNotVerified" && "This email doesn't exist in our system. Please register with this email."}
+                                            {type === "passwordNotMatch" && "Your password doesn't match your credentials. Please try again."}
+                                            {type === "duplicate" && "Your timeslot had been booked. Please try again with another timeslot."}
                                         </p>
                                     </div>
                                 </div>
@@ -69,7 +57,7 @@ export default function SuccessModal({ type, successModalOpen, setSuccessModalOp
                         <div className="bg-neutral-800/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-neutral-800">
                             <button
                                 type="button"
-                                onClick={() => setSuccessModalOpen(false)}
+                                onClick={() => setErrorModalOpen(false)}
                                 className="inline-flex w-full justify-center rounded-lg bg-yellow-600 px-3 py-2 text-sm font-bold text-black shadow-sm hover:bg-yellow-500 sm:ml-3 sm:w-auto transition-colors"
                             >
                                 OK

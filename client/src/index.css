@@ -47,3 +47,32 @@ code {
 .animate-gradient-spin{
   animation: rotate-gradient 3s linear infinite;
 }
+
+/* Custom Scrollbar Class */
+.custom-scrollbar {
+  overflow-x: auto;      /* Allow horizontal scrolling */
+  overflow-y: hidden;    /* Hide vertical scrollbar completely */
+}
+
+/* 1. The total size of the scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px;           /* Height for horizontal bars */
+  width: 0px;            /* Width for vertical bars (hides them) */
+}
+
+/* 2. The "Track" (the background of the bar) */
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #262626;   /* neutral-800: Dark gray background */
+  border-radius: 4px;
+}
+
+/* 3. The "Thumb" (the moving part) */
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #ca8a04;   /* yellow-600: Matches your active buttons */
+  border-radius: 4px;
+}
+
+/* 4. Hover effect for the thumb */
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a16207;   /* yellow-700: Slightly darker on hover */
+}

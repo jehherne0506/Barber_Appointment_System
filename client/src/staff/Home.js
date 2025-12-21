@@ -9,6 +9,7 @@ import { io } from 'socket.io-client';
 import checkAuthenticated from "../checkAuthenticated";
 import fetchWithRateLimit from "../fetchWithRateLimit";
 import ConfirmPaymentModal from "./ConfirmPaymentModal";
+import ErrorModal from "../ErrorModal";
 
 export default function StaffHome(){
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -20,6 +21,7 @@ export default function StaffHome(){
     const [socket, setSocket] = useState(null);
     const [confirmPaymentModalOpen, setConfirmPaymentModalOpen] = useState(false);
     const [confirmPaymentAppointment, setConfirmPaymentAppointment] = useState(null);
+    const [errorModalOpen, setErrorModalOpen] = useState(false);
 
     const userRef = useRef(null);
 
@@ -29,8 +31,7 @@ export default function StaffHome(){
         async function checkAuth() {
             const { authenticated } = await checkAuthenticated(setIsAuthenticated, userRef);
             if (!authenticated) {
-                // auth modal
-                navigate("/auth/login");
+                navigate("/auth/login", {state: {errorModalOpen: true}});
             }
         }
         checkAuth();
@@ -95,10 +96,9 @@ export default function StaffHome(){
                 const allCompletedAppointments = allAppointments.filter(appointment => appointment.status === "COMPLETED");
                 setCompletedAppointments(allCompletedAppointments);
             } else if(result.status === "fail" && result.message === "auth"){
-                // auth modal
-                navigate("/auth/login");
+                navigate("/auth/login", {state: {errorModalOpen: true}});
             } else{
-                // error modal
+                setErrorModalOpen(true);
             }
         };
 
@@ -148,14 +148,13 @@ export default function StaffHome(){
                 });
                 toast.success("Appointment is in progress!");
             } else if(result.status === "fail" && result.message === "auth"){
-                // auth modal
-                navigate("/auth/login");
+                navigate("/auth/login", {state: {errorModalOpen: true}});
             } else{
-                // error modal
+                setErrorModalOpen(true);
             }
         } catch(err){
             console.log(err);
-            // error modal
+            setErrorModalOpen(true);
         }
     };
 
@@ -187,14 +186,13 @@ export default function StaffHome(){
                 });
                 toast.success("Appointment is completed!");
             } else if(result.status === "fail" && result.message === "auth"){
-                // auth modal
-                navigate("/auth/login");
+                navigate("/auth/login", {state: {errorModalOpen: true}});
             } else{
-                // error modal
+                setErrorModalOpen(true);
             }
         } catch(err){
             console.log(err);
-            // error modal
+            setErrorModalOpen(true);
         }
     };
 
@@ -307,6 +305,8 @@ export default function StaffHome(){
             {confirmPaymentModalOpen && confirmPaymentAppointment &&
                 <ConfirmPaymentModal confirmPaymentModalOpen={confirmPaymentModalOpen} setConfirmPaymentModalOpen={setConfirmPaymentModalOpen} appointment={confirmPaymentAppointment} handleAppointmentToCompleted={handleAppointmentToCompleted} />
             }
+
+            <ErrorModal type="error" errorModalOpen={errorModalOpen} setErrorModalOpen={setErrorModalOpen} />
         </>
     )
 };

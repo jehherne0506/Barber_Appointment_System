@@ -7,6 +7,9 @@ import Home from "./Home";
 import VerifyEmailFailFallback from "./VerifyEmailFailFallback";
 import Appointment from "./Appointment";
 import PaymentSuccess from "./PaymentSuccess";
+import MakeAppointment from "./MakeAppointment";
+import RescheduleAppointment from "./RescheduleAppointment";
+import CancelAppointment from "./CancelAppointment";
 
 import StaffHome from "./staff/Home";
 
@@ -20,6 +23,9 @@ function App() {
           <Route path="/auth/verifyEmail/fail" element={<VerifyEmailFailFallback />} />
           <Route path="/" element={<Home />} />
           <Route path="/appointment" element={<Appointment />} />
+          <Route path="makeAppointment" element={<MakeAppointment />} />
+          <Route path="/rescheduleAppointment" element={<RescheduleAppointment />} />
+          <Route path="/cancelAppointment" element={<CancelAppointment />} />
           <Route path="/stripe/paymentSuccess" element={<PaymentSuccess />} />
 
           <Route path="/staff" element={<StaffHome />} />

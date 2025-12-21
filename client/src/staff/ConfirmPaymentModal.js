@@ -17,12 +17,12 @@ export default function ConfirmPaymentModal({ confirmPaymentModalOpen, setConfir
         async function checkAuth() {
             const { authenticated } = await checkAuthenticated(setIsAuthenticated, userRef);
             if (!authenticated) {
-                navigate("/auth/login");
+                navigate("/auth/login", {state: {errorModalOpen: true}});
             }
         }
             
         checkAuth();
-    }, []);
+    }, [navigate]);
 
     return(
         <>

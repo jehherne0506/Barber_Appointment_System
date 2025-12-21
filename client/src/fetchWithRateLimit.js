@@ -11,7 +11,6 @@ async function fetchWithRateLimit(url, options, retries=3){
     for(let i=0; i<retries; i++){
         const response = await fetch(url, options);
         if(response.status === 429){
-            // add a dialog
             console.log("Rate Limit: " + i+1);
             await new Promise(res => setTimeout(res, 900 * 1000));
             continue

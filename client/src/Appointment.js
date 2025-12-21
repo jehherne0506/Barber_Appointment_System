@@ -9,10 +9,10 @@ import toast, { Toaster } from 'react-hot-toast';
 import checkAuthenticated from './checkAuthenticated';
 import fetchWithRateLimit from './fetchWithRateLimit';
 import AddPhoneNumberModal from './AddPhoneNumberModal';
-import MakeAppointmentModal from './MakeAppointmentModal';
 import RescheduleAppointmentModal from './RescheduleAppointmentModal';
 import CancelAppointmentModal from './CancelAppointmentModal';
 import SuccessModal from './SuccessModal';
+import ErrorModal from './ErrorModal';
 import Header from './Header';
 
 import appointmentPage1 from "./public/appointmentPage1.jpg";
@@ -36,9 +36,9 @@ export default function Appointment(){
     const [successModalOpen, setSuccessModalOpen] = useState(false);
     const [successModalType, setSuccessModalType] = useState("");
 
+    const [errorModalOpen, setErrorModalOpen] = useState(false);
+
     const [view, setView] = useState(1);
-    
-    const [makeAppointmentModalOpen, setMakeAppointmentModalOpen] = useState(false);
     const [rescheduleAppointmentModalOpen, setRescheduleAppointmentModalOpen] = useState(false);
     const [cancelAppointmentModalOpen, setCancelAppointmentModalOpen] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
@@ -49,8 +49,7 @@ export default function Appointment(){
         async function checkAuth() {
             const { authenticated } = await checkAuthenticated(setIsAuthenticated, userRef);console.log(authenticated)
             if (!authenticated) {
-                // auth modal
-                navigate("/auth/login");
+                navigate("/auth/login", {state: {errorModalOpen: true}});
             }
         }
         checkAuth();
@@ -259,15 +258,14 @@ export default function Appointment(){
             if(result.status === "success"){
                 setHavePhoneNumber(result.message);
             } else if(result.status === "fail" && result.message === "auth"){
-                // auth modal
-                navigate("/auth/login");
+                navigate("/auth/login", {state: {errorModalOpen: true}});
             } else{
-                // error modal
+                setErrorModalOpen(true);
             }
         };
 
         fetchPhoneNumberStatus();
-    }, [])
+    }, [navigate])
 
     useEffect(()=>{
         async function fetchAppointmentData(){
@@ -275,19 +273,18 @@ export default function Appointment(){
                 method: "GET",
                 credentials: "include"
             });
-            const result = await response.json();
+            const result = await response.json();console.log(result)
             if(result.status === "success"){
                 setAppointmentStats(result.message);
             } else if(result.status === "fail" && result.message === "auth"){
-                // auth modal
-                navigate("/auth/login");
+                navigate("/auth/login", {state: {errorModalOpen: true}});
             } else{
-                // error modal
+                setErrorModalOpen(true);
             }
         };
 
         fetchAppointmentData();
-    }, [])
+    }, [navigate])
     
 
     useEffect(()=>{
@@ -305,10 +302,9 @@ export default function Appointment(){
                 setUpcomingAppointments(upcoming);
                 setPastAppointments(past);
             } else if(result.status === "fail" && result.message === "auth"){
-                // auth modal
-                navigate("/auth/login");
+                navigate("/auth/login", {state: {errorModalOpen: true}});
             } else{
-                // error modal
+                setErrorModalOpen(true);
             }
         };
 
@@ -322,10 +318,9 @@ export default function Appointment(){
             if(result.status === "success"){console.log(result.message)
                 setLiveQueue(result.message);
             } else if(result.status === "fail" && result.message === "auth"){
-                // auth modal
-                navigate("/auth/login");
+                navigate("/auth/login", {state: {errorModalOpen: true}});
             } else{
-                // error modal
+                setErrorModalOpen(true);
             }
         }
 
@@ -333,148 +328,21 @@ export default function Appointment(){
             retrieveAppointments();
             retrieveLiveQueue();
         };
-    }, [isAuthenticated]);
+    }, [isAuthenticated, navigate]);
 
     useEffect(()=>{
-        if(location.state?.successModalOpen){
-            setSuccessModalOpen(true);
-            setSuccessModalType("makeAppointment");
-            navigate(location.pathName, {replace: true, state: {}}); // clear state
+        if(location.state && Object.keys(location.state).length > 0){
+            if(location.state?.successModalOpen){
+                setSuccessModalOpen(true);
+                setSuccessModalType(location.state.successModalType || "makeAppointment");
+            }
+            if(location.state?.errorModalOpen){
+                setErrorModalOpen(true);
+                setErrorModalOpen(location.state.errorModalType || "error");
+            }
+            navigate(location.pathname, {replace: true, state: {}}); // clear state
         }
     }, [location.state]);
-
-    function BarberQueue({ barberLiveQueue }){console.log(barberLiveQueue)
-        const { inProgressQueue, scheduledQueue } = useMemo(()=>{
-            const inProgress = [];
-            const scheduled = [];
-
-            if(barberLiveQueue?.appointments){
-                barberLiveQueue.appointments.forEach(appointment => {
-                    if(appointment.status === "IN PROGRESS"){
-                        inProgress.push(appointment);
-                    } else if(appointment.status === "SCHEDULED"){
-                        scheduled.push(appointment);
-                    }
-                })
-            };
-
-            scheduled.sort((a,b)=> a.queueMin - b.queueMin);
-            return {inProgressQueue: inProgress, scheduledQueue: scheduled}
-        }, [barberLiveQueue?.appointments])
-
-        return (
-            <div className="bg-white rounded-lg shadow-xl mx-auto w-full max-w-md relative overflow-hidden border border-gray-200">
-                {/* Decorative Top Gold Bar */}
-                <div className="absolute top-0 left-0 w-full h-1.5 bg-yellow-600"></div>
-
-                <div className="p-6">
-                    {/* Header */}
-                    <div className="flex justify-between items-start mb-8 border-b border-gray-100 pb-4">
-                        <div className='flex gap-4 items-center flex-1 min-w-0 mr-4'>
-                            <div className='relative shrink-0'>
-                                {barberLiveQueue.avatar ? (
-                                    <img className='h-8 w-8 lg:h-12 lg:w-12 rounded-full object-cover border-2 border-yellow-600 p-[2px]' src={barberLiveQueue.avatar} alt="Barber" />
-                                ) : (
-                                    <div className='h-8 w-8 lg:h-12 lg:w-12 rounded-full bg-gray-200 border-2 border-yellow-600'></div>
-                                )}
-                                {/* Status Dot */}
-                                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-                            </div>
-                            <div className='min-w-0 flex-1'>
-                                <h3 className="font-geom md:font-bartle lg:text-xl text-black leading-tight break-all">{barberLiveQueue?.username || "Barber"}</h3>
-                            </div>
-                        </div>
-                        
-                        <div className={`p-1 lg:px-3 lg:py-1 rounded-sm border ${inProgressQueue.length > 0 ? "bg-black border-yellow-600" : "bg-gray-50 border-gray-200"}`}>
-                            <span className={`font-geom text-xs font-bold uppercase tracking-widest ${inProgressQueue.length > 0 ? "text-white" : "text-gray-400"}`}>
-                                {inProgressQueue.length > 0 ? "BUSY" : "OPEN"}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Active Chair Section */}
-                    <div className="mb-8">
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="h-px w-4 bg-yellow-600"></div>
-                            <p className="font-geom text-sm font-bold text-black uppercase tracking-wider">Currently Serving</p>
-                        </div>
-
-                        {inProgressQueue.length > 0 ? (
-                            inProgressQueue.map(app => (
-                                <div key={app._id} className="relative p-4 bg-yellow-50 border border-yellow-200/60 rounded-md flex items-center justify-between">
-                                    {/* Left Gold accent */}
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-yellow-600 rounded-l-md"></div>
-                                    
-                                    <div className="pl-3">
-                                        <p className="font-bartle text-lg text-black">
-                                            {app.customerId === userRef.current.id ? "You" : "Customer #" + app.queueMin}
-                                        </p>
-                                        <p className="font-robotoCondensed text-sm text-yellow-800/80 uppercase tracking-tight font-bold">
-                                            {app.service?.name || "Haircut Service"}
-                                        </p>
-                                    </div>
-
-                                    {/* Animated Pulse */}
-                                    <div className="flex flex-col items-end">
-                                        <span className="relative flex h-3 w-3">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-500 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-600"></span>
-                                        </span>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="p-4 bg-gray-50 border border-dashed border-gray-300 rounded-md text-center">
-                                <p className="font-bartle text-gray-400">Chair is Empty</p>
-                                <p className="font-robotoCondensed text-xs text-gray-400 uppercase">Ready for next client</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Waiting List */}
-                    <div>
-                        <div className="flex justify-between items-end mb-4">
-                            <div className="flex items-center gap-2">
-                                <div className="h-px w-4 bg-gray-300"></div>
-                                <p className="font-geom text-sm font-bold text-gray-500 uppercase tracking-wider">Up Next</p>
-                            </div>
-                            <span className="font-robotoCondensed text-xs font-bold text-white bg-black px-2 py-1 rounded-sm">
-                                {scheduledQueue.length} WAITING
-                            </span>
-                        </div>
-                        
-                        <div className="flex flex-col gap-2 max-h-52 overflow-y-auto pr-2 custom-scrollbar">
-                            {scheduledQueue.length > 0 ? (
-                                scheduledQueue.map((app, idx) => (
-                                    <div key={app._id} className="group p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors flex justify-between items-center">
-                                        <div className="flex items-center gap-4">
-                                            {/* Vintage Number Style */}
-                                            <span className="font-bartle text-xl text-gray-300 group-hover:text-yellow-600 transition-colors">
-                                                {idx + 1}
-                                            </span>
-                                            <div>
-                                                <span className="font-robotoCondensed font-bold text-gray-800 text-lg block leading-none">
-                                                    {app.customerId === userRef.current.id ? "You" : "Customer #" + app.queueMin}
-                                                </span>
-                                                <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">
-                                                    {app.queueMin - (new Date().getHours() * 60 + new Date().getMinutes()) > 0 
-                                                        ? `Wait: ~${app.queueMin - (new Date().getHours() * 60 + new Date().getMinutes())}m`
-                                                        : "Serving Soon"
-                                                    }
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-sm font-robotoCondensed text-gray-400 italic text-center py-4">NO APPOINTMENTS IN QUEUE</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
     
     return(
         <>
@@ -487,7 +355,7 @@ export default function Appointment(){
                             <div className='text-left'>
                                 <h1 className='text-xl sm:text-4xl font-bartle mb-2'>My Appointments</h1>
                                 <p className='text-lg sm:text-xl font-geom mb-10 opacity-80'>Manage your bookings and view your appointment history</p>
-                                <button className="group relative overflow-hidden w-fit bg-amber-500 hover:bg-amber-400 text-black hover:scale-105 font-sans gap-2 font-bold rounded-lg" onClick={()=>{havePhoneNumber ? setMakeAppointmentModalOpen(prevState => !prevState) : setPhoneNumberModalOpen(true)}}>
+                                <button className="group relative overflow-hidden w-fit bg-amber-500 hover:bg-amber-400 text-black hover:scale-105 font-sans gap-2 font-bold rounded-lg" onClick={()=>{havePhoneNumber ? navigate("/makeAppointment") : setPhoneNumberModalOpen(true)}}>
                                         <div className="flex items-center gap-2 transition-transform duration-500 ease-in-out p-4 sm:px-6 py-4 group-hover:-translate-y-full">
                                             <img className="w-5" src={calendar} alt="Calendar Icon" />
                                             <p>Online Appointment</p>
@@ -547,7 +415,7 @@ export default function Appointment(){
                                                     Days Ago
                                                 </h1>
                                                 {appointmentStats.lastAppointmentDate !== "-" && (
-                                                    <p className='text-[10px] text-white mt-2 font-sans'>
+                                                    <p className='text-[6px] xl:text-[10px] text-white mt-2 font-sans'>
                                                         {appointmentStats.lastAppointmentDate > 14 ? "We miss you!" : "See you soon!"}
                                                     </p>
                                                 )} 
@@ -558,11 +426,11 @@ export default function Appointment(){
                         </div>
                     </div>
 
-                    <div className='bg-gray-800 px-5 py-20 sm:p-28 flex gap-10 flex-col lg:flex-row'>
+                    <div className='bg-neutral-900 px-5 py-20 sm:p-28 flex gap-10 flex-col lg:flex-row'>
                         <div className='bg-gray-600 p-5 lg:p-10 rounded-lg text-center lg:text-left text-white flex-1 min-w-0'>
                             <div className='flex flex-col gap-5 lg:flex-row lg:gap-0 justify-between items-center mx-2'>
                                 <div className='flex flex-col gap-5'>
-                                    <h1 className='text-2xl font-geom md:font-bartle'>Live Queue Status</h1>
+                                    <h1 className='text-2xl font-geom xl:font-bartle'>Live Queue Status</h1>
                                     <p className=' text-sm sm:text-lg opacity-80 font-geom'>Real Time Barber Availability and Wait Times</p>
                                 </div>
                                 <div className='flex gap-2 items-center p-3 rounded-3xl bg-red-500/15 border-red-500 border-2'>
@@ -573,7 +441,7 @@ export default function Appointment(){
                             <div className='flex flex-col gap-5 mt-10'>
                                 {liveQueue?.length > 0 ? 
                                     liveQueue.map(queue=>(
-                                        <BarberQueue barberLiveQueue={queue} /> 
+                                        <BarberQueue barberLiveQueue={queue} currentUserId={userRef.current.id} /> 
                                     ))
 
                                 : <h1>No Live Queue Available Currently</h1>}
@@ -581,7 +449,7 @@ export default function Appointment(){
                         </div>
                         <div className='bg-gray-600 p-5 lg:p-10 rounded-lg text-center lg:text-right text-white flex-1 min-w-0'>
                             <div className='flex flex-col gap-5 mb-10'>
-                                <h1 className='font-geom text-2xl md:font-bartle'>Appointment's Details</h1>
+                                <h1 className='font-geom text-2xl xl:font-bartle'>Appointment's Details</h1>
                                 <p className='sm:text-lg opacity-80 font-geom'>View All Your Upcoming and Past Appointments</p>
                             </div>
                             <div className='w-full mx-2 mb-10 flex justify-around items-center bg-gray-400 rounded-lg p-1 md:p-2 text-center font-geom font-bold'>
@@ -606,8 +474,8 @@ export default function Appointment(){
 
                                                 {/* Center: Details */}
                                                 <div className='flex-1 flex flex-col gap-2'>
-                                                    <div className='flex justify-between md:justify-start items-center gap-4 mt-2'>
-                                                        <h2 className='font-geom md:font-bartle text-lg md:text-sm text-white tracking-wide'>
+                                                    <div className='flex lg:flex-wrap xl:flex-nowrap justify-between items-center gap-4 mt-2'>
+                                                        <h2 className='font-robotoCondensed text-xl text-white tracking-wide text-left'>
                                                             {appointment.serviceId.name}
                                                         </h2>
                                                         {/* Status Badge */}
@@ -620,12 +488,12 @@ export default function Appointment(){
                                                         </span>
                                                     </div>
 
-                                                    <div className='flex flex-col gap-y-2 text-gray-300 font-robotoCondensed text-sm'>
+                                                    <div className='flex flex-col gap-y-2 text-gray-300 font-robotoCondensed text-sm w-full'>
                                                         <div className='flex items-center gap-2'>
                                                             <FontAwesomeIcon icon={faClock} className="text-yellow-600" />
                                                             <p>{appointment.startedAt} - {appointment.endedAt}</p>
                                                         </div>
-                                                        <div className='flex items-center gap-2'>
+                                                        <div className='flex flex-wrap items-center gap-2'>
                                                             <FontAwesomeIcon icon={faCircleUser} className="text-yellow-600" />
                                                             <p className="capitalize">{appointment.staffId.username}</p>
                                                         </div>
@@ -638,15 +506,17 @@ export default function Appointment(){
 
                                                 {/* Right: Actions */}
                                                 <div className='w-full md:w-auto flex md:flex-col gap-2 shrink-0 mt-2'>
-                                                    <button 
-                                                        onClick={() => { setRescheduleAppointmentModalOpen(true); setSelectedAppointment(appointment); }}
-                                                        className='flex-1 md:flex-none p-2 md:px-4 md:py-2 bg-white text-black font-bold font-geom text-xs uppercase hover:bg-yellow-600 transition-colors rounded-sm'
+                                                    <button
+                                                        onClick={() => { navigate("/rescheduleAppointment", { state: {appointmentIdSelected: appointment._id, serviceIdSelected: appointment.serviceId._id, staffIdSelected: appointment.staffId._id, dateSelected: appointment.date, timeslotSelected: `${appointment.startedAt} - ${appointment.endedAt}`} }) }}
+                                                        className='flex-1 md:flex-none p-2 md:px-4 md:py-2 bg-white text-black font-bold font-geom text-xs uppercase hover:bg-yellow-600 transition-colors rounded-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-neutral-400 disabled:hover:bg-neutral-400'
+                                                        disabled={(new Date(appointment.date) - new Date()) <= 24 * 60 * 60 * 1000}
                                                     >
                                                         Reschedule
                                                     </button>
                                                     <button 
-                                                        onClick={() => { setCancelAppointmentModalOpen(true); setSelectedAppointment(appointment); }}
-                                                        className='flex-1 md:flex-none p-2 md:px-4 md:py-2 border border-gray-600 text-gray-400 font-bold font-geom text-xs uppercase hover:border-red-500 hover:text-red-500 transition-colors rounded-sm'
+                                                        onClick={() => { navigate("/cancelAppointment", { state: {appointmentIdSelected: appointment._id, serviceIdSelected: appointment.serviceId._id, staffIdSelected: appointment.staffId._id, dateSelected: appointment.date, timeslotSelected: {time: `${appointment.startedAt} - ${appointment.endedAt}`}}} )}}
+                                                        className='flex-1 md:flex-none p-2 md:px-4 md:py-2 border border-gray-600 text-gray-400 font-bold font-geom text-xs uppercase hover:border-red-500 hover:text-red-500 transition-colors rounded-sm disabled:hover:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-neutral-400 disabled:hover:bg-neutral-400 disabled:text-black'
+                                                        disabled={(new Date(appointment.date) - new Date()) <= 24 * 60 * 60 * 1000}
                                                     >
                                                         Cancel
                                                     </button>
@@ -654,9 +524,7 @@ export default function Appointment(){
                                             </div>
                                             )
                                         )
-                                    ) : (
-                                            <h1>No Recent Appointment Found</h1>
-                                        ))
+                                    ) : null )
                                     }
                             </div>
 
@@ -678,7 +546,7 @@ export default function Appointment(){
                                             {/* Center: Details */}
                                             <div className='flex-1 flex flex-col gap-2'>
                                                 <div className='flex justify-between md:justify-start items-center gap-4 mt-2'>
-                                                    <h2 className='text-2xl font-geom text-white tracking-wide'>
+                                                    <h2 className='font-robotoCondensed text-xl text-white tracking-wide text-left'>
                                                         {appointment.serviceId.name}
                                                     </h2>
                                                     {/* Status Badge */}
@@ -709,18 +577,11 @@ export default function Appointment(){
                                         </div>
                                         )
                                     )
-                                ) : (
-                                        <h1>No Recent Appointment Found</h1>
-                                    ))
+                                ) : null)
                                 }
                             </div>
                         </div>
                     </div>
-
-
-                    {makeAppointmentModalOpen &&
-                        <MakeAppointmentModal makeAppointmentModalOpen={makeAppointmentModalOpen} setMakeAppointmentModalOpen={setMakeAppointmentModalOpen} setSuccessModalOpen={()=>{setSuccessModalOpen(true); setSuccessModalType("makeAppointment")}} setUpcomingAppointments={setUpcomingAppointments} setLiveQueue={setLiveQueue} />
-                    }
 
                     {rescheduleAppointmentModalOpen && selectedAppointment !== null &&
                         <RescheduleAppointmentModal rescheduleAppointmentModalOpen={rescheduleAppointmentModalOpen} setRescheduleAppointmentModalOpen={setRescheduleAppointmentModalOpen} selectedAppointment={selectedAppointment} setSuccessModalOpen={()=>{setSuccessModalOpen(true); setSuccessModalType("rescheduleAppointment")}} />
@@ -730,9 +591,147 @@ export default function Appointment(){
                         <CancelAppointmentModal CancelAppointmentModalOpen={cancelAppointmentModalOpen} setCancelAppointmentModalOpen={setCancelAppointmentModalOpen} selectedAppointment={selectedAppointment} setSuccessModalOpen={()=>{setSuccessModalOpen(true); setSuccessModalType("cancelAppointment")}} />
                     }
                     <AddPhoneNumberModal phoneNumberModalOpen={phoneNumberModalOpen} setPhoneNumberModalOpen={setPhoneNumberModalOpen} setHavePhoneNumber={setHavePhoneNumber} setSuccessModalOpen={()=>{setSuccessModalOpen(true); setSuccessModalType("addPhoneNumber")}} />
-                    <SuccessModal type={successModalType} successModalOpen={successModalOpen} setSuccessModalOpen={setSuccessModalOpen} email={userRef.current.email} />
+                    
+                    {userRef.current &&
+                        <SuccessModal type={successModalType} successModalOpen={successModalOpen} setSuccessModalOpen={setSuccessModalOpen} email={userRef.current.email} />
+                    }
+
+                    <ErrorModal type="error" errorModalOpen={errorModalOpen} setErrorModalOpen={setErrorModalOpen} />
                 </div>
             }       
         </>
     )
 };
+
+function BarberQueue({ barberLiveQueue, currentUserId }){console.log(barberLiveQueue)
+    const { inProgressQueue, scheduledQueue } = useMemo(()=>{
+        const inProgress = [];
+        const scheduled = [];
+
+        if(barberLiveQueue?.appointments){
+            barberLiveQueue.appointments.forEach(appointment => {
+                if(appointment.status === "IN PROGRESS"){
+                    inProgress.push(appointment);
+                } else if(appointment.status === "SCHEDULED"){
+                    scheduled.push(appointment);
+                }
+            })
+        };
+
+        scheduled.sort((a,b)=> a.queueMin - b.queueMin);
+        return {inProgressQueue: inProgress, scheduledQueue: scheduled}
+    }, [barberLiveQueue?.appointments])
+
+    return (
+        <div className="bg-white rounded-lg shadow-xl mx-auto w-full max-w-md relative overflow-hidden border border-gray-200">
+            {/* Decorative Top Gold Bar */}
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-yellow-600"></div>
+
+            <div className="p-6">
+                {/* Header */}
+                <div className="flex justify-between items-start mb-8 border-b border-gray-100 pb-4">
+                    <div className='flex gap-4 items-center flex-1 min-w-0 mr-4'>
+                        <div className='relative shrink-0'>
+                            {barberLiveQueue.avatar ? (
+                                <img className='h-8 w-8 lg:h-12 lg:w-12 rounded-full object-cover border-2 border-yellow-600 p-[2px]' src={barberLiveQueue.avatar} alt="Barber" />
+                            ) : (
+                                <div className='h-8 w-8 lg:h-12 lg:w-12 rounded-full bg-gray-200 border-2 border-yellow-600'></div>
+                            )}
+                            {/* Status Dot */}
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        </div>
+                        <div className='min-w-0 flex-1'>
+                            <h3 className="font-geom md:font-bartle lg:text-xl text-black leading-tight break-all">{barberLiveQueue?.username || "Barber"}</h3>
+                        </div>
+                    </div>
+                    
+                    <div className={`p-1 lg:px-3 lg:py-1 rounded-sm border ${inProgressQueue.length > 0 ? "bg-black border-yellow-600" : "bg-gray-50 border-gray-200"}`}>
+                        <span className={`font-geom text-xs font-bold uppercase tracking-widest ${inProgressQueue.length > 0 ? "text-white" : "text-gray-400"}`}>
+                            {inProgressQueue.length > 0 ? "BUSY" : "OPEN"}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Active Chair Section */}
+                <div className="mb-8">
+                    <div className="flex items-center gap-2 mb-3">
+                        <div className="h-px w-4 bg-yellow-600"></div>
+                        <p className="font-geom text-sm font-bold text-black uppercase tracking-wider">Currently Serving</p>
+                    </div>
+
+                    {inProgressQueue.length > 0 ? (
+                        inProgressQueue.map(app => (
+                            <div key={app._id} className="relative p-4 bg-yellow-50 border border-yellow-200/60 rounded-md flex items-center justify-between">
+                                {/* Left Gold accent */}
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-yellow-600 rounded-l-md"></div>
+                                
+                                <div className="pl-3">
+                                    <p className="font-bartle text-lg text-black">
+                                        {app.customerId === currentUserId ? "You" : "Customer #" + app.queueMin}
+                                    </p>
+                                    <p className="font-robotoCondensed text-sm text-yellow-800/80 uppercase tracking-tight font-bold">
+                                        {app.service?.name || "Haircut Service"}
+                                    </p>
+                                </div>
+
+                                {/* Animated Pulse */}
+                                <div className="flex flex-col items-end">
+                                    <span className="relative flex h-3 w-3">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-500 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-600"></span>
+                                    </span>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="p-4 bg-gray-50 border border-dashed border-gray-300 rounded-md text-center">
+                            <p className="font-bartle text-gray-400">Chair is Empty</p>
+                            <p className="font-robotoCondensed text-xs text-gray-400 uppercase">Ready for next client</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Waiting List */}
+                <div>
+                    <div className="flex justify-between items-end mb-4">
+                        <div className="flex items-center gap-2">
+                            <div className="h-px w-4 bg-gray-300"></div>
+                            <p className="font-geom text-sm font-bold text-gray-500 uppercase tracking-wider">Up Next</p>
+                        </div>
+                        <span className="font-robotoCondensed text-xs font-bold text-white bg-black px-2 py-1 rounded-sm">
+                            {scheduledQueue.length} WAITING
+                        </span>
+                    </div>
+                    
+                    <div className="flex flex-col gap-2 max-h-52 overflow-y-auto pr-2 custom-scrollbar">
+                        {scheduledQueue.length > 0 ? (
+                            scheduledQueue.map((app, idx) => (
+                                <div key={app._id} className="group p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors flex justify-between items-center">
+                                    <div className="flex items-center gap-4">
+                                        {/* Vintage Number Style */}
+                                        <span className="font-bartle text-xl text-gray-300 group-hover:text-yellow-600 transition-colors">
+                                            {idx + 1}
+                                        </span>
+                                        <div>
+                                            <span className="font-robotoCondensed font-bold text-gray-800 text-lg block leading-none">
+                                                {app.customerId === currentUserId ? "You" : "Customer #" + app.queueMin}
+                                            </span>
+                                            <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">
+                                                {app.queueMin - (new Date().getHours() * 60 + new Date().getMinutes()) > 0 
+                                                    ? `Wait: ~${app.queueMin - (new Date().getHours() * 60 + new Date().getMinutes())}m`
+                                                    : "Serving Soon"
+                                                }
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-sm font-robotoCondensed text-gray-400 italic text-center py-4">NO APPOINTMENTS IN QUEUE</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

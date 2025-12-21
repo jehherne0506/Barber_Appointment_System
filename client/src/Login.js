@@ -1,9 +1,10 @@
-import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRef, useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import fetchWithRateLimit from "./fetchWithRateLimit";
 import logoImg from "./public/logoTransparent.png";
 import eyeOpen from "./public/eyeOpen.png";
 import eyeClose from "./public/eyeClose.png"
+import ErrorModal from "./ErrorModal";
 
 export default function Login(){
     const [passwordView, setPasswordView] = useState(true);
@@ -11,6 +12,17 @@ export default function Login(){
     const emailRef = useRef(null);
     const passwordRef = useRef(null);
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const [errorModalOpen, setErrorModalOpen] = useState(false);
+    const [errorModalType, setErrorModalType] = useState("error");
+
+    useEffect(()=>{
+        if(location?.state?.errorModalOpen){
+            setErrorModalOpen(true);
+            setErrorModalType("auth");
+        }
+    }, [])
 
     async function handleSubmit(e){
         e.preventDefault();
@@ -23,17 +35,22 @@ export default function Login(){
             body: JSON.stringify({email: emailRef.current.value, password: passwordRef.current.value})
         });
 
-        const result = await response.json();
+        const result = await response.json();console.log(result)
         if(result.status === "success"){
             if(result.role === "ADMIN"){
                 navigate("/admin")
             } else{
                 navigate("/");
             }
-        } else if(result.status === "fail" && result.message === "email not verified"){
-            console.log("email not verified");
+        } else if(result.status === "fail" && result.message === "emailNotVerified"){
+            setErrorModalOpen(true);
+            setErrorModalType("emailNotVerified");
+        } else if(result.status === "fail" && result.message === "passwordNotMatch"){
+            setErrorModalOpen(true);
+            setErrorModalType("passwordNotMatch");
         } else{
-            console.log("error");
+            setErrorModalOpen(true);
+            setErrorModalType("error");
         }
     }
 
@@ -76,6 +93,7 @@ export default function Login(){
                     </div>
                 </div>
             </div>
+            <ErrorModal type={errorModalType} errorModalOpen={errorModalOpen} setErrorModalOpen={setErrorModalOpen} />
         </div>
     )
 }
