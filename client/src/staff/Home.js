@@ -65,7 +65,7 @@ export default function StaffHome(){
     }, [navigate]);
 
     useEffect(()=>{
-        const newSocket = io("http://localhost:5000", {
+        const newSocket = io("https://barber-appointment-system-g7f5.onrender.com", {
             withCredentials: true
         });
 
@@ -91,7 +91,7 @@ export default function StaffHome(){
 
     useEffect(()=>{
         async function fetchStaffData(){
-            const response = await fetch("http://localhost:5000/staff", {
+            const response = await fetch("https://barber-appointment-system-g7f5.onrender.com/staff", {
                 method: "GET",
                 credentials: "include"
             });
@@ -127,7 +127,7 @@ export default function StaffHome(){
 
     useEffect(()=>{
         async function fetchAppointmentsToday(){
-            const response = await fetchWithRateLimit("http://localhost:5000/staff/appointments", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/staff/appointments", {
                 method: "GET",
                 credentials: "include",
             });
@@ -168,7 +168,7 @@ export default function StaffHome(){
 
     async function handleAppointmentToInProgress(appointment){
         try{
-            const response = await fetchWithRateLimit("http://localhost:5000/staff/appointments/updateStatus", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/staff/appointments/updateStatus", {
                 method: "PUT",
                 credentials: "include",
                 headers: {
@@ -206,7 +206,7 @@ export default function StaffHome(){
 
     async function handleAppointmentToCompleted(appointment){
         try{
-            const response = await fetchWithRateLimit("http://localhost:5000/staff/appointments/updateStatus", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/staff/appointments/updateStatus", {
                 method: "PUT",
                 credentials: "include",
                 headers: {
@@ -244,7 +244,7 @@ export default function StaffHome(){
 
     async function handleRemoveUnavailableTimeslot(e){
         e.preventDefault();
-        const response = await fetchWithRateLimit("http://localhost:5000/staff/removeUnavailableTimeslot", {
+        const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/staff/removeUnavailableTimeslot", {
             method: "POST",
             credentials: "include",
             headers: {

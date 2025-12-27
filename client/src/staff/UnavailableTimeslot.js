@@ -33,7 +33,7 @@ export default function UnavailableTimeslot({ unavailableTimeslotOpen, setUnavai
 
     useEffect(()=>{
         async function fetchTimeslot(){
-            const response = await fetchWithRateLimit("http://localhost:5000/staff/timeslot", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/staff/timeslot", {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -62,7 +62,7 @@ export default function UnavailableTimeslot({ unavailableTimeslotOpen, setUnavai
 
     async function handleAddUnavailableTimeslot(e){
         e.preventDefault();
-        const response = await fetchWithRateLimit("http://localhost:5000/staff/unavailableTimeslot", {
+        const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/staff/unavailableTimeslot", {
             method: "POST",
             credentials: "include",
             headers: {

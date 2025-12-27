@@ -39,7 +39,7 @@ export default function AddPhoneNumberModal({ phoneNumberModalOpen, setPhoneNumb
             return;
         }
 
-        const response = await fetchWithRateLimit("http://localhost:5000/addPhoneNumber", {
+        const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/addPhoneNumber", {
             method: "POST",
             credentials: "include",
             headers: {

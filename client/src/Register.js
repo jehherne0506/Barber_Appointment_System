@@ -38,7 +38,7 @@ export default function Register(){
             setValidPhoneNumber(false);
             return;
         }
-        const response = await fetchWithRateLimit("http://localhost:5000/auth/register", {
+        const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/auth/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -113,8 +113,8 @@ export default function Register(){
                     <br></br> 
 
                     <div className="flex gap-5 justify-center mt-2">
-                        <a className="bg-white rounded-full p-2" href="http://localhost:5000/auth/google"><img className="w-8" src="https://img.icons8.com/?size=100&id=17949&format=png&color=000000" alt="Google Logo" /></a>
-                        <a className="bg-white rounded-full p-2" href="http://localhost:5000/auth/facebook"><img className="w-8" src="https://img.icons8.com/?size=100&id=118497&format=png&color=000000" alt="Facebook Logo" /></a>
+                        <a className="bg-white rounded-full p-2" href="https://barber-appointment-system-g7f5.onrender.com/auth/google"><img className="w-8" src="https://img.icons8.com/?size=100&id=17949&format=png&color=000000" alt="Google Logo" /></a>
+                        <a className="bg-white rounded-full p-2" href="https://barber-appointment-system-g7f5.onrender.com/auth/facebook"><img className="w-8" src="https://img.icons8.com/?size=100&id=118497&format=png&color=000000" alt="Facebook Logo" /></a>
                     </div>
 
                     <div className="mt-4">

@@ -135,7 +135,7 @@ app.use(limiter);
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:5000/auth/google/callback",
+    callbackURL: "https://barber-appointment-system-g7f5.onrender.com/auth/google/callback",
     passReqToCallback: true
   },
   async function(req, googleAccessToken, googleRefreshToken, profile, cb) {
@@ -200,7 +200,7 @@ app.get('/auth/google/callback',
 passport.use(new FacebookStrategy({
   clientID: process.env.FACEBOOK_APP_ID,
   clientSecret: process.env.FACEBOOK_APP_SECRET,
-  callbackURL: "http://localhost:5000/auth/facebook/callback",
+  callbackURL: "https://barber-appointment-system-g7f5.onrender.com/auth/facebook/callback",
   profileFields: ["id", "displayName", "emails", "photos"],
   passReqToCallback: true
 },
@@ -290,7 +290,7 @@ app.post('/auth/register', async(req, res)=>{
         await newUser.save();
         const jwtAccessToken = jwt.sign({id: newUser.id,  username: newUser.username, email: newUser.email, avatar: newUser.avatar, role: "CUSTOMER"}, process.env.JWT_SECRET, {expiresIn: '1d'});
 
-        const urlVerify = `http://localhost:5000/auth/verifyEmail?token=${jwtAccessToken}`;console.log("mail Status")
+        const urlVerify = `https://barber-appointment-system-g7f5.onrender.com/auth/verifyEmail?token=${jwtAccessToken}`;console.log("mail Status")
         const mailStatus = await sendVerificationEmail(email, urlVerify);console.log(mailStatus)
         if(mailStatus){
           return res.json({status: "success"});
@@ -979,7 +979,7 @@ app.post("/changeEmail", verifyUser, async(req,res)=>{
       userFound.emailVerified = false;
       await userFound.save();
 
-      const verifyLink = `http://localhost:5000/verifyEmailChange?token=${emailChangeToken}`
+      const verifyLink = `https://barber-appointment-system-g7f5.onrender.com/verifyEmailChange?token=${emailChangeToken}`
 
       if(sendVerifyEmailChange(email, verifyLink)){
         return res.json({status: "success"});

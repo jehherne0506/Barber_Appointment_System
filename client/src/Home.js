@@ -124,7 +124,7 @@ export default function Home(){
     async function handleSubmitFeedback(e){
         e.preventDefault(); console.log(feedbackEmail.current.value, feedbackDate.current.value , feedbackService.current.value , feedbackComment.current.value)
         if(feedbackName.current.value && feedbackEmail.current.value && feedbackDate.current.value && feedbackService.current.value && feedbackComment.current.value){
-            const response = await fetchWithRateLimit("http://localhost:5000/feedback", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/feedback", {
                 method: "POST",
                 credentials: "include",
                 headers: {

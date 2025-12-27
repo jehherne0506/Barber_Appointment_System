@@ -27,7 +27,7 @@ export default function ChangeEmailModal({ changeEmailModalOpen, setChangeEmailM
     
         async function handleChangeEmail(e){
             e.preventDefault();
-            const response = await fetchWithRateLimit("http://localhost:5000/changeEmail", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/changeEmail", {
                 method: "POST",
                 credentials: "include",
                 headers: {

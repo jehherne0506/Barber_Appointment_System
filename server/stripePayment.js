@@ -5,8 +5,8 @@
 // async function stripePayment(service, appointmentId, email){
 //   const appointmentIdString = String(appointmentId);
 //     const session = await stripe.checkout.sessions.create({
-//         success_url: `http://localhost:5000/appointment/paymentSuccess?appointmentId=${appointmentIdString}&email=${encodeURIComponent(email)}`,
-//         cancel_url: `http://localhost:5000/appointment/paymentFailure?appointmentId=${appointmentIdString}&?email=${encodeURIComponent(email)}`,
+//         success_url: `https://barber-appointment-system-g7f5.onrender.com/appointment/paymentSuccess?appointmentId=${appointmentIdString}&email=${encodeURIComponent(email)}`,
+//         cancel_url: `https://barber-appointment-system-g7f5.onrender.com/appointment/paymentFailure?appointmentId=${appointmentIdString}&?email=${encodeURIComponent(email)}`,
 //         client_reference_id: appointmentIdString,
 //         metadata: {appointmentIdString: appointmentIdString},
 //         line_items: [
@@ -36,8 +36,8 @@ async function stripePayment(service, appointmentId, email){
   const appointmentIdString = String(appointmentId);
 
   const session = await stripe.checkout.sessions.create({
-    success_url: `http://localhost:5000/appointment/paymentSuccess`,
-    cancel_url: `http://localhost:5000/appointment/paymentFailure`,
+    success_url: `https://barber-appointment-system-g7f5.onrender.com/appointment/paymentSuccess`,
+    cancel_url: `https://barber-appointment-system-g7f5.onrender.com/appointment/paymentFailure`,
     
     metadata: {
       appointmentId: appointmentIdString

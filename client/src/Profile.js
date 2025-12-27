@@ -56,7 +56,7 @@ export default function Profile(){
 
     useEffect(()=>{
         async function fetchProfile(){
-            const response = await fetchWithRateLimit("http://localhost:5000/profile", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/profile", {
                 method: "GET",
                 credentials: "include"
             });
@@ -76,7 +76,7 @@ export default function Profile(){
     }, [navigate])
 
     async function handleSubmitStyleProfile(){
-        const response = await fetchWithRateLimit("http://localhost:5000/styleProfile", {
+        const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/styleProfile", {
             method: "POST",
             credentials: "include",
             headers: {

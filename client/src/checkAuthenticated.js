@@ -3,7 +3,7 @@ import fetchWithRateLimit from "./fetchWithRateLimit";
 export default async function checkAuthenticated(setIsAuthenticated, userRef){
     async function refreshToken(){
         console.log("refresh")
-        const response = await fetchWithRateLimit("http://localhost:5000/auth/refresh",  {
+        const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/auth/refresh",  {
             method: 'POST',
             credentials: "include"
         });
@@ -18,7 +18,7 @@ export default async function checkAuthenticated(setIsAuthenticated, userRef){
     }
 
     async function verifyToken(){
-        const response = await fetchWithRateLimit("http://localhost:5000/auth/verify", {
+        const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/auth/verify", {
             method: 'GET',
             credentials: "include"
         });

@@ -47,7 +47,7 @@ export default function CancelAppointment(){
 
     useEffect(()=>{
         async function fetchServices(){
-            const response = await fetchWithRateLimit("http://localhost:5000/appointment/services", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/appointment/services", {
                 method: "GET",
                 credentials: "include"
             });
@@ -83,7 +83,7 @@ export default function CancelAppointment(){
     async function handleSubmit(e){
         e.preventDefault();
         setCancelAppointmentModalOpen(false);
-        const response = await fetch("http://localhost:5000/appointment/cancelAppointment", {
+        const response = await fetch("https://barber-appointment-system-g7f5.onrender.com/appointment/cancelAppointment", {
             method: "DELETE",
             credentials: "include",
             headers: {

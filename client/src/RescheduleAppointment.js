@@ -46,7 +46,7 @@ export default function RescheduleAppointment(){
 
     useEffect(()=>{
         async function fetchServices(){
-            const response = await fetchWithRateLimit("http://localhost:5000/appointment/services", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/appointment/services", {
                 method: "GET",
                 credentials: "include"
             });
@@ -69,7 +69,7 @@ export default function RescheduleAppointment(){
 
     useEffect(()=>{
         async function fetchStaffTimeslot(){
-            const response = await fetchWithRateLimit("http://localhost:5000/appointment/timeslot", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/appointment/timeslot", {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -112,7 +112,7 @@ export default function RescheduleAppointment(){
     async function handleSubmit(e){
         e.preventDefault();
         console.log('start fetch')
-        const response = await fetch("http://localhost:5000/appointment/rescheduleAppointment", {
+        const response = await fetch("https://barber-appointment-system-g7f5.onrender.com/appointment/rescheduleAppointment", {
             method: "PUT",
             credentials: "include",
             headers: {

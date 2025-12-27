@@ -57,7 +57,7 @@ export default function Appointment(){
 
     
     useEffect(()=>{
-        const socket = io("http://localhost:5000", {
+        const socket = io("https://barber-appointment-system-g7f5.onrender.com", {
             withCredentials: true
         });
         
@@ -250,7 +250,7 @@ export default function Appointment(){
 
     useEffect(()=>{
         async function fetchPhoneNumberStatus(){
-            const response = await fetchWithRateLimit("http://localhost:5000/havePhoneNumber", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/havePhoneNumber", {
                 method: "GET",
                 credentials: "include"
             });
@@ -269,7 +269,7 @@ export default function Appointment(){
 
     useEffect(()=>{
         async function fetchAppointmentData(){
-            const response = await fetchWithRateLimit("http://localhost:5000/AppointmentStats", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/AppointmentStats", {
                 method: "GET",
                 credentials: "include"
             });
@@ -289,7 +289,7 @@ export default function Appointment(){
 
     useEffect(()=>{
         async function retrieveAppointments(){
-            const response = await fetchWithRateLimit("http://localhost:5000/appointment", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/appointment", {
                 method: "GET",
                 credentials: "include"
             });
@@ -309,7 +309,7 @@ export default function Appointment(){
         };
 
         async function retrieveLiveQueue(){
-            const response = await fetchWithRateLimit("http://localhost:5000/liveQueue", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/liveQueue", {
                 method: "GET",
                 credentials: "include"
             });

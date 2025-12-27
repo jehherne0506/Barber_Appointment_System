@@ -57,7 +57,7 @@ export default function MakeAppointment(){
     }, [navigate]);
 
     useEffect(()=>{
-        const newSocket = io("http://localhost:5000", {
+        const newSocket = io("https://barber-appointment-system-g7f5.onrender.com", {
             withCredentials: true
         });
 
@@ -70,7 +70,7 @@ export default function MakeAppointment(){
 
     useEffect(()=>{
         async function fetchServices(){
-            const response = await fetchWithRateLimit("http://localhost:5000/appointment/services", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/appointment/services", {
                 method: "GET",
                 credentials: "include"
             });
@@ -93,7 +93,7 @@ export default function MakeAppointment(){
 
     useEffect(()=>{
         async function fetchStaffTimeslot(){
-            const response = await fetchWithRateLimit("http://localhost:5000/appointment/timeslot", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/appointment/timeslot", {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -139,7 +139,7 @@ export default function MakeAppointment(){
         e.preventDefault();
         const paymentMethod = e.nativeEvent.submitter.value;
         async function submitAppointment(){
-            const response = await fetchWithRateLimit("http://localhost:5000/appointment/makeAppointment", {
+            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/appointment/makeAppointment", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

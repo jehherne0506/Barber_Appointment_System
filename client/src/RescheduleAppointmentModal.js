@@ -36,7 +36,7 @@ export default function RescheduleAppointmentModal({ rescheduleAppointmentModalO
 
     useEffect(()=>{
             async function fetchStaffTimeslot(){
-                const response = await fetch("http://localhost:5000/appointment/timeslot", {
+                const response = await fetch("https://barber-appointment-system-g7f5.onrender.com/appointment/timeslot", {
                     method: "POST",
                     credentials: "include",
                     headers: {
@@ -71,7 +71,7 @@ export default function RescheduleAppointmentModal({ rescheduleAppointmentModalO
 
         async function handleRescheduleAppointment(e){
             e.preventDefault();
-            const response = await fetch("http://localhost:5000/appointment/rescheduleAppointment", {
+            const response = await fetch("https://barber-appointment-system-g7f5.onrender.com/appointment/rescheduleAppointment", {
                 method: "PUT",
                 credentials: "include",
                 headers: {
