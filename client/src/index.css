@@ -4,7 +4,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Geom:ital,wght@0,300..900;1,300..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=BBH+Hegarty&display=swap" rel="stylesheet');
+@import url('https://fonts.googleapis.com/css2?family=BBH+Hegarty&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -40,7 +40,7 @@ code {
 
 @keyframes rotate-gradient{
   to{
-    ---border-angle: 360deg;
+    --border-angle: 360deg;
   }
 }
 

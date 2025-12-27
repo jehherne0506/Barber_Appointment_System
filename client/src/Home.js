@@ -7,7 +7,6 @@ import { FaXTwitter } from "react-icons/fa6";
 import { FaYoutube } from "react-icons/fa";
 import Hamburger from 'hamburger-react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
 import checkAuthenticated from './checkAuthenticated';
@@ -32,7 +31,6 @@ import shave from "./public/shave.png";
 import styling from "./public/style.svg";
 import trimming from "./public/trim.svg";
 import moustache from "./public/moustache.png";
-import location from "./public/location.png";
 import manager  from "./public/manager.jpg";
 import close from "./public/close.png";
 import brand1 from "./public/brand1.webp";
@@ -109,7 +107,7 @@ export default function Home(){
             }
             navigate(location.pathname, {replace: true, state: {}}); // clear state
         }
-    }, [location.state]);
+    }, [location.state, location.pathname, navigate]);
 
     useEffect(()=>{
         async function checkAuth() {
@@ -337,7 +335,7 @@ export default function Home(){
 
                 <div className="relative bg-white">
                     <div className="absolute h-1/2 bg-yellow-150 bottom-0 left-0 w-full"></div>
-                    <img className="relative z-10 w-[80%] mx-[10%] rounded-md cursor-pointer" onClick={()=>{setOpenVideo(true)}} src={youtubePreview} />
+                    <img className="relative z-10 w-[80%] mx-[10%] rounded-md cursor-pointer" alt="Youtube Preview" onClick={()=>{setOpenVideo(true)}} src={youtubePreview} />
                     <div className="flex justify-center items-center absolute z-20 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full w-[10%] h-[10%] sm:w-32 sm:h-32 p-10 text-white border-white border-[1px] cursor-pointer" onClick={()=>{setOpenVideo(true)}}>
                         <p>PLAY</p>
                     </div> 
@@ -501,7 +499,7 @@ export default function Home(){
                     </div>
                 </div>
 
-                <div className="w-[-80%] mx-auto sm:w-full overflow-x-hidden">
+                <div className="w-[80%] mx-auto sm:w-full overflow-x-hidden">
                     <div className="relative">
                         <div className="h-[300px] lg:h-[600px] w-full relative z-0 mb-10 lg:mb-0">
                             <style>{`

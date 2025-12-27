@@ -14,7 +14,7 @@ module.exports = {
         sans: ['Almendra', 'sans-serif'],
         roboto: ['"Roboto Mono"', 'sans-serif'],
         bartle: ['"BBH Bartle"', "sans-serif"],
-        hegarty: ['"BBH Hegarty', 'sans-serif'],
+        hegarty: ['"BBH Hegarty"', 'sans-serif'],
         robotoCondensed: ['"Roboto Condensed"', "sans-serif"],
         dela: ['"Dela Gothic One"', "sans-serif"],
         geom: ['Geom']
