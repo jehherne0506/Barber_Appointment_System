@@ -36,18 +36,22 @@ export default function ErrorModal({ errorModalOpen, setErrorModalOpen, type }){
                                     <DialogTitle as="h3" className="text-xl font-geom font-semibold leading-6 text-white tracking-wide">
                                        {type === "auth" && "You are Not Authenticated."}
                                        {type === "error" && "An Error has Occured."}
-                                       {type === "emailNotVerified" && "Email not Registered."}
-                                       {type === "passwordNotMatch" && "Incorrect Password."}
+                                       {type === "emailNotVerified" && "Email not Verified."}
+                                       {type === "notMatch" && "Incorrect Credentials."}
                                        {type === "duplicate" && "Duplicate Booking Occured."}
+                                       {type === "emailRegistered" && "Email is Registered"}
+                                       {type === "emailVerifiedFail" && "Email Fail to Verify"}
                                     </DialogTitle>
                                     
                                     <div className="mt-2">
                                         <p className="text-sm text-neutral-400 font-robotoCondensed leading-relaxed">
                                             {type === "auth" && "Please login again."}
                                             {type === "error" && "Please try again as our server face an unexpected Error."}
-                                            {type === "emailNotVerified" && "This email doesn't exist in our system. Please register with this email."}
-                                            {type === "passwordNotMatch" && "Your password doesn't match your credentials. Please try again."}
+                                            {type === "emailNotVerified" && "This email is still not verified. Please click on the link sent to your gmail."}
+                                            {type === "notMatch" && "Your credentials doesn't match. Please try again."}
                                             {type === "duplicate" && "Your timeslot had been booked. Please try again with another timeslot."}
+                                            {type === "emailRegistered" && "Please login with this gmail instead."}
+                                            {type === "emailVerifiedFail" && "We have fail to verify your gmail. Please Register again."}
                                         </p>
                                     </div>
                                 </div>

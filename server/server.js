@@ -10,6 +10,7 @@ const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const stripe = require('stripe')(process.env.STRIPE_API_KEY);
 const http = require("http");
+const crypto = require("crypto");
 const { Server } = require("socket.io");
 
 const User = require("./models/user");
@@ -20,11 +21,12 @@ const Feedback = require("./models/feedback");
 
 const connectMongoose = require('./connectMongoose');
 const generateCookie = require('./generateCookie');
-const {sendVerificationEmail, sendMakeAppointmentDetails, sendRescheduleAppointmentDetails, sendDeleteAppointmentDetails, sendAppointmentInProgress, sendAppointmentCompleted, sendFeedback} = require('./sendEmail');
+const {sendVerificationEmail, sendMakeAppointmentDetails, sendRescheduleAppointmentDetails, sendDeleteAppointmentDetails, sendAppointmentInProgress, sendAppointmentCompleted, sendFeedback, sendVerifyEmailChange} = require('./sendEmail');
 const {verifyUser, verifyStaff, verifyAdmin} = require('./auth');
 const generateTimeslot = require('./generateTimeslot');
 const stripePayment = require('./stripePayment');
 const scheduleSMS = require('./scheduleSMS');
+const connectRedisCache = require('./connectRedisCache');
 var GoogleStrategy = require('passport-google-oauth20').Strategy;
 var FacebookStrategy = require('passport-facebook').Strategy;
 
@@ -36,7 +38,7 @@ const limiter = rateLimit({
     ipv6Subnet: 56, 
 });
 
-let redisClient;
+let redisClient = connectRedisCache();
 const CACHE_EXPIRATION = 3600;
 
 const app = express();
@@ -187,9 +189,12 @@ app.get('/auth/google/callback',
     const {jwtRefreshToken, jwtAccessToken} = req.authInfo; 
     generateCookie(res, jwtRefreshToken, jwtAccessToken); 
     if(req.user.role === "ADMIN"){
-          return res.redirect("http://localhost:3000/admin");
+      return res.redirect("http://localhost:3000/admin");
+    } else if(req.user.role === "STAFF"){
+      return res.redirect("http://localhost:3000/staff");
+    } else{
+      return res.redirect("http://localhost:3000/");
     }
-    return res.redirect("http://localhost:3000/");
   });
 
 passport.use(new FacebookStrategy({
@@ -251,8 +256,11 @@ app.get('/auth/facebook/callback',
     generateCookie(res, jwtRefreshToken, jwtAccessToken);
     if(req.user.role === "ADMIN"){
       return res.redirect("http://localhost:3000/admin");
+    } else if(req.user.role === "STAFF"){
+      return res.redirect("http://localhost:3000/staff");
+    } else{
+      return res.redirect("http://localhost:3000/");
     }
-    return res.redirect("http://localhost:3000/");
   });
 
 app.post('/auth/register', async(req, res)=>{
@@ -389,7 +397,7 @@ app.post('/auth/login', async(req,res)=>{
   try{
     const user = await User.findOne({
       email: email
-    });
+    }); console.log(user);
 
     if(user && user.emailVerified){console.log('verified email')
       const userPassword = user.password;
@@ -403,11 +411,11 @@ app.post('/auth/login', async(req,res)=>{
         console.log("generated")
         return res.json({status: "success", role: user.role});
       }
-      return res.json({status: "fail", message: "passwordNotMatch"});
+      return res.json({status: "fail", message: "notMatch"});
     } else if(user && !user.emailVerified){
       return res.json({status: "fail", message: "emailNotVerified"});
     } else{
-      return res.json({status: "fail", message: "error"});
+      return res.json({status: "fail", message: "notMatch"});
     }
   } catch(err){
     console.log(err);
@@ -464,8 +472,6 @@ app.get('/appointmentStats', verifyUser, async(req,res)=>{ // fetch num of upcom
   }
 
   try{
-    let totalMoneySpent = 0;
-    let lastAppointmentDate = "-";
       const dateObj = new Date(new Date().toISOString().split("T")[0] + 'T00:00:00.000Z');
       const upcomingAppointments = await Appointment.find({
         customerId: userId,
@@ -481,16 +487,11 @@ app.get('/appointmentStats', verifyUser, async(req,res)=>{ // fetch num of upcom
         }
       }).sort({"date": -1}).populate("serviceId", "price");
 
-      if(upcomingAppointments.length !== 0 || pastAppointments.length !== 0){
-        const upcomingAppointmentsCost = upcomingAppointments.reduce((acc,currentAppointment)=> acc + currentAppointment.serviceId?.price || 0, 0);
-        const pastAppointmentsCost = pastAppointments.reduce((acc,currentAppointment)=> acc + currentAppointment.serviceId?.price || 0, 0);
-        totalMoneySpent = upcomingAppointmentsCost + pastAppointmentsCost;
-        if(pastAppointments.length > 0){
-          lastAppointmentDate = Math.floor((dateObj - new Date(pastAppointments[0].date)) / (24 * 60 * 60 * 1000));
-        }
-      }
+      let allAppointments = [...upcomingAppointments, ...pastAppointments];
 
-      return res.json({status: "success", message: {upcomingAppointmentsCount: upcomingAppointments.length, pastAppointmentsCount: pastAppointments.length, totalMoneySpent, lastAppointmentDate}});
+      const {totalSpent, lastAppointmentDate} = calculateStats(allAppointments);
+
+      return res.json({status: "success", message: {upcomingAppointmentsCount: upcomingAppointments.length, pastAppointmentsCount: pastAppointments.length, totalSpent, lastAppointmentDate}});
   } catch(err){
     console.log(err);
     return res.json({status: "fail", message: "error"});
@@ -563,8 +564,17 @@ app.get("/appointment", verifyUser, async(req,res)=>{
 
 app.get("/appointment/services", verifyUser, async(req,res)=>{
   try{
-    const allServices = await Service.find({}).populate("staff", "username avatar");
-    return res.json({status: "success", message: allServices});
+    const client = await redisClient;
+    let allServices = await client.get('allServices');console.log(allServices)
+    if(allServices){
+        return res.json({status: "success", message: JSON.parse(allServices)});
+    } else{
+      allServices = await Service.find({}).populate("staff", "username avatar");
+      await client.set("allServices", JSON.stringify(allServices), {
+        EX: 36000 
+      });
+      return res.json({status: "success", message: allServices});
+    }
   } catch(err){
     console.log(err);
     return res.json({status: "fail"});
@@ -587,7 +597,7 @@ app.post("/appointment/timeslot", verifyUser, async(req,res)=>{
         const allAppointments = await Appointment.find({
         staffId: eachStaffId,
         date: dateObj
-        });console.log("allAppointment");console.log(allAppointments)
+        });console.log("allAppointment");
 
         const allUnavailableTimeslot = await UnavailableTimeslot.find({
           staffId: eachStaffId,
@@ -596,7 +606,7 @@ app.post("/appointment/timeslot", verifyUser, async(req,res)=>{
 
         const timeslot = generateTimeslot(date, allAppointments, allUnavailableTimeslot);
 
-        for(let i=0; i<(timeslot.length - serviceDuration); i++){
+        for(let i=0; i<=(timeslot.length - serviceDuration); i++){
           let availableTimeslot = true; 
           for(let y=0; y<serviceDuration; y++){
             if(timeslot[i+y].time === ""){
@@ -613,27 +623,27 @@ app.post("/appointment/timeslot", verifyUser, async(req,res)=>{
       const allAppointments = await Appointment.find({
         staffId: staffId,
         date: dateObj
-      }); console.log("all");console.log(allAppointments)
+      }); console.log("all");
 
       const allUnavailableTimeslot = await UnavailableTimeslot.find({
         staffId: staffId,
         date: dateObj
       }); 
 
-      const timeslot = generateTimeslot(date, allAppointments, allUnavailableTimeslot)
-
-      for(let i=0; i<(timeslot.length - serviceDuration); i++){
+      const timeslot = generateTimeslot(date, allAppointments, allUnavailableTimeslot);
+      console.log(timeslot.length)
+      for(let i=0; i<=(timeslot.length - serviceDuration); i++){
         let availableTimeslot = true; 
-        for(let y=0; y<serviceDuration; y++){
-          if(timeslot[i+y].time === ""){
+        for(let y=0; y<serviceDuration; y++){console.log(timeslot[i+y])
+          if(timeslot[i+y]?.time === ""){
             availableTimeslot = false;
           };
-        }; 
+        };
 
         if(availableTimeslot){ 
           allAvailableTimeslot.push({time: `${timeslot[i].time.split("-")[0].trim()} - ${timeslot[i+serviceDuration-1].time.split("-")[1].trim()}`, queueMin: timeslot[i].queueMin});
-          i += serviceDuration - 1;
-        }
+          i += serviceDuration - 1;console.log("All Available")
+        }console.log(allAvailableTimeslot)
       }
     }
 
@@ -667,7 +677,7 @@ app.post("/appointment/makeAppointment", verifyUser, async(req,res)=>{
       if(staffId === "any"){
         const serviceFound = await Service.findOne({
           _id: serviceId
-        }); console.log(serviceFound.staff)
+        }); 
 
         const allStaffIds = serviceFound.staff;
 
@@ -760,33 +770,38 @@ app.put("/appointment/rescheduleAppointment", verifyUser, async(req,res)=>{
     const queueMin = timeslot.queueMin;
 
     if(id && timeslot && startedAt && endedAt){
-       const hasDuplicateAppointment = await Appointment.findOne({
-        date: dateObj,
-        startedAt: startedAt
-      });
+      const appointmentFound = await Appointment.findById(id);
+      if(appointmentFound){
+        const hasDuplicateAppointment = await Appointment.findOne({
+          staffId: appointmentFound.staffId,
+          date: dateObj,
+          startedAt: startedAt
+        });
 
-      if(hasDuplicateAppointment){
-        return res.json({status: "fail", message: "duplicate"});
+        if(hasDuplicateAppointment){
+          return res.json({status: "fail", message: "duplicate"});
+        }
+
+        const appointmentReschedule = await Appointment.findByIdAndUpdate(
+          id, {
+          date: dateObj,
+          startedAt: startedAt,
+          endedAt: endedAt,
+          startedAtDate: startedAtDate,
+          endedAtDate: endedAtDate,
+          queueMin: queueMin
+        });
+
+        if(appointmentReschedule){
+          const appointment = await Appointment.findById(
+            id
+          ).populate("customerId", "username email").populate("serviceId", "name price").populate("staffId", "_id username");
+          sendRescheduleAppointmentDetails(appointment, customerEmail);
+          io.emit("rescheduleAppointment", appointment);
+          return res.json({status: "success"});
+        } return res.json({status: "fail", message: "error"});
       }
-
-      const appointmentReschedule = await Appointment.findByIdAndUpdate(
-        id, {
-        date: dateObj,
-        startedAt: startedAt,
-        endedAt: endedAt,
-        startedAtDate: startedAtDate,
-        endedAtDate: endedAtDate,
-        queueMin: queueMin
-      });
-
-      if(appointmentReschedule){
-        const appointment = await Appointment.findById(
-          id
-        ).populate("customerId", "username email").populate("serviceId", "name price").populate("staffId", "_id username");
-        sendRescheduleAppointmentDetails(appointment, customerEmail);
-        io.emit("rescheduleAppointment", appointment);
-        return res.json({status: "success"});
-      } return res.json({status: "fail", message: "error"});
+       return res.json({status: "fail", message: "error"});
     }
   } catch(err){
     console.log(err);
@@ -813,6 +828,12 @@ app.delete("/appointment/cancelAppointment", verifyUser, async(req,res)=>{
 
 app.get("/liveQueue", verifyUser, async(req, res)=>{
   try{
+    const client = await redisClient;
+    
+    const cacheLiveQueue = await client.get('liveQueue');
+    if(cacheLiveQueue){
+      return res.json({status: "success", message: JSON.parse(cacheLiveQueue)});
+    }
     const appointmentsByBarber = await User.aggregate([
       {
         $match: {role: "STAFF"} // fetch users that match the role "STAFF"
@@ -859,7 +880,10 @@ app.get("/liveQueue", verifyUser, async(req, res)=>{
           as: "appointments"
         } 
       },
-    ]); console.log(appointmentsByBarber)
+    ]);
+    await client.set('liveQueue', JSON.stringify(appointmentsByBarber), {
+      EX: 60
+    })
     return res.json({status: "success", message: appointmentsByBarber});
   } catch(err){
     console.log(err);
@@ -867,11 +891,198 @@ app.get("/liveQueue", verifyUser, async(req, res)=>{
   }
 });
 
+app.get("/profile", verifyUser, async(req, res)=>{
+  const userId = req.user.id;
+
+  if(!userId){
+    return res.json({status: "fail", message: "auth"});
+  }
+  
+  try{
+    const userFound = await User.findOne({_id: userId}).populate({path: "appointments", populate: {path: "serviceId", model: "Service", select: "price name"}});
+    if(!userFound){
+      return res.json({status: "fail", message: "auth"});
+    };
+
+    const {totalSpent, lastAppointmentDate} = calculateStats(userFound.appointments);
+
+    let allAppointmentPreferences = {};
+    let appointmentPreferenceService = null;
+    let appointmentPreferenceStaff = null;
+    if(userFound.appointments && userFound.appointments.length > 0){
+      const allAppointments = await Appointment.find({customerId: userId}).populate("serviceId", "name").populate("staffId", "username");
+      for(let appointment of allAppointments){
+        const serviceName = appointment.serviceId.name;
+        const staffName = appointment.staffId.username;
+        const key = `${serviceName}-${staffName}`;
+
+        allAppointmentPreferences[key] = (allAppointmentPreferences[key] || 0) + 1;
+      }
+      const appointmentPreferences = Object.keys(allAppointmentPreferences).reduce((a,b)=> allAppointmentPreferences[a] > allAppointmentPreferences[b] ? a : b);
+      appointmentPreferenceService = appointmentPreferences.split("-")[0];
+      appointmentPreferenceStaff = appointmentPreferences.split("-")[1];
+    }console.log(allAppointmentPreferences);
+    
+    const userObj = {_id: userFound._id, username: userFound.username, avatar: userFound.avatar, email: userFound.email, date: userFound.createdAt, phoneNumber: userFound.phoneNumber || null, numberOfAppointments: userFound.appointments.length || 0, totalSpent: totalSpent, styleProfile: userFound.styleProfile, lastAppointmentDate: lastAppointmentDate, appointmentPreferenceService: appointmentPreferenceService, appointmentPreferenceStaff: appointmentPreferenceStaff, emailVerified: userFound.emailVerified, googleVerified: !!(userFound.googleId), facebookVerified: !!(userFound.facebookId)}
+    return res.json({status: "success", message: userObj});
+  } catch(err){
+    console.log(err);
+    return res.json({status: "fail", message: "error"});
+  }
+})
+
+app.post("/styleProfile", verifyUser, async(req,res)=>{
+  const userId = req.user.id;
+  const {hairType, barberNotes} = req.body;console.log(req.body)
+
+  if(!userId){
+    return res.json({status: "fail", message: "auth"});
+  }
+
+  try{
+    let userFound = await User.findById(userId);
+    if(userFound){
+      if(hairType != null){
+        userFound.styleProfile.hairType = hairType;
+      }
+      if(barberNotes !== null){
+        userFound.styleProfile.barberNotes = barberNotes;
+      }
+      await userFound.save();
+      return res.json({status: "success"});
+    } return res.json({status: "fail", message: "error"});
+  } catch(err){
+    console.log(err);
+    return res.json({status: "fail", message: "error"});
+  }
+})
+
+app.post("/changeEmail", verifyUser, async(req,res)=>{
+  const userId = req.user.id;
+  const {email} = req.body;
+
+  if(!userId){
+    return res.json({status: "fail", message: "auth"});
+  }
+
+  try{
+    const duplicateEmail = await User.findOne({email: email});
+    if(duplicateEmail){
+      return res.json({status: "fail", message: "duplicate"});
+    }
+
+    const userFound = await User.findById(userId);
+    if(userFound){
+      const emailChangeToken = crypto.randomBytes(32).toString("hex")
+      userFound.tempEmail = email;
+      userFound.emailChangeToken = emailChangeToken;
+      userFound.emailVerified = false;
+      await userFound.save();
+
+      const verifyLink = `http://localhost:5000/verifyEmailChange?token=${emailChangeToken}`
+
+      if(sendVerifyEmailChange(email, verifyLink)){
+        return res.json({status: "success"});
+      } return res.json({status: "fail", message: "error"});
+    }
+    return res.json({status: "fail", message: "error"});
+
+  } catch(err){
+    console.log(err);
+    return res.json({status: "fail", message: "error"});
+  }
+})
+
+app.get("/verifyEmailChange", async(req,res)=>{
+  const token = req.query.token;
+
+  try{
+    if(token){
+      let userFound = await User.findOne({emailChangeToken: token});
+      if(userFound){
+        userFound.email = userFound.tempEmail;
+        userFound.emailVerified = true;
+        await userFound.save();
+        res.redirect("http://localhost:3000/auth/login/changeEmailFallback")
+      } return res.json({status: "fail", message: "error"});
+    }
+  } catch(err){
+    console.log(err);
+    return res.json({status: "fail", message: "error"});
+  }
+})
+
+app.get("/staff", verifyStaff, async(req,res)=>{
+  const staffId = req.user.id;
+
+  if(!staffId){
+    return res.json({status: "fail", message: "auth"});
+  }
+
+  try{
+    const staffFound = await User.findById(staffId);
+    if(!staffFound){
+      return res.json({status: "fail", message: "auth"});
+    }
+
+    const pendingAppointmentCount = await Appointment.countDocuments({
+      staffId: staffId,
+      status: "SCHEDULED" || "IN PROGRESS"
+    });
+
+    const completedAppointmentCount = await Appointment.countDocuments({
+      staffId: staffId,
+      status: "COMPLETED"
+    });
+
+    const daysStaff = Math.floor((new Date() - new Date(staffFound.createdAt)) / (24 * 60 * 60 * 1000));
+
+    const totalNumberAppointments = await Appointment.countDocuments();
+    const staffNumberAppointments = await Appointment.countDocuments({
+      staffId: staffId
+    });
+
+    const totalNumberCustomer = await User.countDocuments({
+      role: "CUSTOMER"
+    });
+    const staffNumberCustomerArray = await Appointment.distinct('customerId', {
+      staffId: staffId
+    });
+    const staffNumberCustomer = staffNumberCustomerArray.length;
+
+    const week = [];
+    for(let i=0; i>-6; i--){
+      const today = new Date();
+      today.setDate(today.getDate() + i);
+      const dayObj = today.toISOString().split("T")[0] + 'T00:00:00.000Z';
+      week.push(dayObj);
+    }
+
+    let appointmentWeekStats = [];
+    for(let day of week){
+      const appointmentStats = await Appointment.countDocuments({date: day, staffId: staffId});
+      appointmentWeekStats.push(appointmentStats);
+    }
+
+    const allUnavailableTimeslot = await UnavailableTimeslot.find({staffId: staffId, date: {$gte: new Date().toISOString().split("T")[0] + "T00:00:00.000Z"}});
+
+    const allUpomingAppointments = await Appointment.find({staffId: staffId, date: {$gt: new Date(new Date().toISOString().split("T")[0] + 'T00:00:00.000Z')}}).populate("serviceId", "name").populate("customerId", "username");
+
+    const staffObj = {username: staffFound.username, avatar: staffFound.avatar, pendingAppointmentCount, completedAppointmentCount, daysStaff, totalNumberAppointments, staffNumberAppointments, totalNumberCustomer, staffNumberCustomer, week, appointmentWeekStats, allUnavailableTimeslot, allUpomingAppointments};
+    console.log(staffObj)
+    return res.json({status: "success", message: staffObj});
+  } catch(err){
+    console.log(err);
+    return res.json({status: "fail", message: "error"});
+  }
+
+})
+
 app.get("/staff/appointments", verifyStaff, async(req, res)=>{
   const staffId = req.user.id;
 
   if(!staffId){
-    return res.json({status: "fail", message: "error"});
+    return res.json({status: "fail", message: "auth"});
   }
 
   try{
@@ -880,7 +1091,7 @@ app.get("/staff/appointments", verifyStaff, async(req, res)=>{
     const allAppointments = await Appointment.find({
       staffId: staffId,
       date: dateObj
-    }).populate("customerId", "username").populate("serviceId", "name").sort({queueMin: 1});
+    }).populate("customerId", "username styleProfile avatar").populate("serviceId", "name price").sort({queueMin: 1});
 
     return res.json({status: "success", message: allAppointments});
   } catch(err){
@@ -889,7 +1100,7 @@ app.get("/staff/appointments", verifyStaff, async(req, res)=>{
   }
 });
 
-app.put("/appointment/updateStatus", verifyStaff, async(req,res)=>{
+app.put("/staff/appointments/updateStatus", verifyStaff, async(req,res)=>{console.log('status')
   const {id, status} = req.body; console.log(req.body)
   try{
     const email = req.user.email;
@@ -914,11 +1125,94 @@ app.put("/appointment/updateStatus", verifyStaff, async(req,res)=>{
   }
 });
 
-app.post('/admin', verifyAdmin, async(req,res)=>{
+app.post("/staff/timeslot", verifyStaff, async(req,res)=>{
+  const staffId = req.user?.id;
+  if(!staffId){
+    return res.json({status: "fail", message: "auth"});
+  }
 
-});
+  try{
+    const {dateSelected} = req.body;
+    const dateObj = new Date(dateSelected + 'T00:00:00.000Z');
+      const allAppointments = await Appointment.find({
+        staffId: staffId,
+        date: dateObj
+      }); console.log("all");
+
+      const allUnavailableTimeslot = await UnavailableTimeslot.find({
+        staffId: staffId,
+        date: dateObj
+      }); 
+
+      let timeslot = generateTimeslot(dateSelected, allAppointments, allUnavailableTimeslot);
+      const updatedTimeslot = timeslot.filter(eachTimeslot => eachTimeslot.time !== "");
+      return res.json({status: "success", message: updatedTimeslot})
+  } catch(err){
+    console.log(err);
+    return res.json({status: "fail", message: "error"});
+  }
+})
+
+app.post("/staff/unavailableTimeslot", verifyStaff, async(req, res)=>{
+    const staffId = req.user?.id;
+    if(!staffId){
+      return res.json({status: "fail", message: "auth"});
+    }
+
+    try{
+      const {dateSelected, startedAt, endedAt, reason} = req.body;
+      const dateObj = new Date(dateSelected + 'T00:00:00.000Z');
+        const unavailableTimeslot = await UnavailableTimeslot({
+          staffId: staffId,
+          date: dateObj,
+          startedAt: startedAt,
+          endedAt: endedAt,
+          reason: reason
+        }); 
+
+      await unavailableTimeslot.save();
+      return res.json({status: "success", message: unavailableTimeslot})
+  } catch(err){
+    console.log(err);
+    return res.json({status: "fail", message: "error"});
+  }
+})
+
+app.post("/staff/removeUnavailableTimeslot", verifyStaff, async(req,res)=>{
+    const staffId = req.user?.id;
+    if(!staffId){
+      return res.json({status: "fail", message: "auth"});
+    }
+
+    try{
+      const { unavailableTimeslotId } = req.body;
+      if(!unavailableTimeslotId){
+        return res.json({status: "fail", message: "error"});
+      }
+      await UnavailableTimeslot.findByIdAndDelete(unavailableTimeslotId);
+      return res.json({status: "success"});
+    } catch(err){
+      console.log(err);
+      return res.json({status: "fail", message: "error"});
+    }
+})
 
 server.listen(5000, async ()=>{
     await connectMongoose();
     console.log("Server running on port 5000");
 })
+
+function calculateStats(appointments){
+  const totalSpent = appointments ? appointments.reduce((acc, currentAppointment) => acc += (currentAppointment.paymentStatus === "PAID" ? currentAppointment.serviceId.price : 0), 0) : 0;
+
+  let lastAppointmentDate = "-";
+  if(appointments.length > 0){
+    const sortedAppointment = appointments.sort((a,b) => new Date(a.date) - new Date(b.date));
+    for(let appointment of sortedAppointment){
+      if(appointment.status === "COMPLETED"){
+        lastAppointmentDate = Math.floor((new Date() - new Date(appointment.date)) / (24 * 60 * 60 * 1000));
+      }
+    }
+  }
+  return {totalSpent, lastAppointmentDate}
+}

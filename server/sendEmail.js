@@ -598,6 +598,108 @@ function generateAdminFeedbackNotificationTemplate(feedback) {
     `;
 }
 
+function generateVerifyEmailChangeTemplate(url) {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background: #f7f7f7;
+                padding: 20px;
+            }
+            .container {
+                max-width: 600px;
+                margin: auto;
+                background: #ffffff;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+            .header {
+                background: linear-gradient(135deg, #fbc531, #f39c12);
+                padding: 30px;
+                text-align: center;
+                color: #333;
+            }
+            .header h1 {
+                margin: 0;
+            }
+            .content {
+                padding: 30px;
+                text-align: center;
+                color: #555;
+            }
+            .button {
+                display: inline-block;
+                margin: 25px 0;
+                padding: 15px 40px;
+                background: #f39c12;
+                color: #fff;
+                text-decoration: none;
+                border-radius: 30px;
+                font-weight: bold;
+                font-size: 16px;
+            }
+            .button:hover {
+                background: #e67e22;
+            }
+            .note {
+                background: #fff3cd;
+                padding: 15px;
+                border-radius: 8px;
+                margin-top: 20px;
+                font-size: 14px;
+                color: #856404;
+            }
+            .footer {
+                background: #fafafa;
+                padding: 20px;
+                text-align: center;
+                font-size: 13px;
+                color: #aaa;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Email Change Request</h1>
+            </div>
+
+            <div class="content">
+                <p>
+                    We received a request to change the email address linked to your BuyLo account.
+                </p>
+
+                <p>
+                    Please confirm this change by clicking the button below:
+                </p>
+
+                <a href="${url}" class="button">Verify Email Change</a>
+
+                <div class="note">
+                    ⚠️ This link will expire in <strong>24 hours</strong>.<br>
+                    If you did not request this change, please ignore this email.
+                </div>
+
+                <p style="margin-top: 20px; font-size: 14px;">
+                    If the button does not work, copy and paste this link into your browser:<br>
+                    <span style="word-break: break-all;">${url}</span>
+                </p>
+            </div>
+
+            <div class="footer">
+                © ${new Date().getFullYear()} BuyLo. All rights reserved.<br>
+                This is an automated email. Please do not reply.
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+}
 
 async function sendMakeAppointmentDetails(appointment, email){
     try{
@@ -703,4 +805,20 @@ async function sendFeedback(feedback, email){
     }
 }
 
-module.exports = {sendVerificationEmail, sendMakeAppointmentDetails, sendRescheduleAppointmentDetails, sendDeleteAppointmentDetails, sendAppointmentInProgress, sendAppointmentCompleted, sendFeedback};
+async function sendVerifyEmailChange(email, verifyLink){
+  try {
+      await transporter.sendMail({
+          from: '"BuyLo" <050607yjh@gmail.com>',
+          to: email,
+          subject: '🔐 Confirm Your Email Change',
+          html: generateVerifyEmailChangeTemplate(verifyLink),
+          text: `Confirm your email change by clicking this link: ${verifyLink}`
+      });
+      return true;
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
+}
+
+module.exports = {sendVerificationEmail, sendMakeAppointmentDetails, sendRescheduleAppointmentDetails, sendDeleteAppointmentDetails, sendAppointmentInProgress, sendAppointmentCompleted, sendFeedback, sendVerifyEmailChange};

@@ -9,10 +9,10 @@ function generateTimeslot(date, appointments, unavailableTimeslots){
         allTimeslots = removeTimeslot(allTimeslots, appointment.startedAt, appointment.endedAt); 
     }
 
-    for(const unavailableTimeslot of unavailableTimeslots){ 
+    for(const unavailableTimeslot of unavailableTimeslots){
         allTimeslots = removeTimeslot(allTimeslots, unavailableTimeslot.startedAt, unavailableTimeslot.endedAt);
     }
-
+console.log(allTimeslots);
     return allTimeslots;
 };
 
@@ -38,7 +38,7 @@ function generateOriginalTimeslot(date){
     const allTimeslots = [];
     let currentTime = WORK_START;
 
-    while(currentTime <= WORK_END){
+    while(currentTime <= WORK_END - 15){
         if(currentTime >= 720 && currentTime <= 780){
             currentTime += INTERVAL;
             allTimeslots.push({time: "", queueMin: ""});
@@ -52,16 +52,16 @@ function generateOriginalTimeslot(date){
     return allTimeslots;
 }
 
-function removeTimeslot(allTimeslots, startedAt, endedAt){
+function removeTimeslot(allTimeslots, startedAt, endedAt){console.log(startedAt); console.log(endedAt)
     let idxStart = allTimeslots.findIndex(timeslot => {
-        const startTime = timeslot.time !== "" ? timeslot.time.split("-")[0].trim() : "";
+        const startTime = timeslot.time !== "" ? timeslot.time.split("-")[0].trim() : "";console.log(startTime); console.log(startedAt)
         return startTime === startedAt;
     });
 
     let idxEnd = allTimeslots.findIndex(timeslot => {
         const endTime = timeslot.time != "" ? timeslot.time.split("-")[1].trim() : "";
         return endTime === endedAt;
-    })
+    }); console.log(idxStart); console.log(idxEnd)
 
     if(idxStart !== -1 && idxEnd !== -1){
         for(let i=idxStart; i<=idxEnd; i++){

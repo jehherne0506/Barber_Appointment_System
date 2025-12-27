@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 
 import { BiLogoFacebook } from "react-icons/bi";
 import { FaInstagram } from "react-icons/fa";
@@ -88,6 +88,7 @@ export default function Home(){
     const [customerReviewIdx, setCustomerReviewIdx] = useState(0);
 
     const [successModalOpen, setSuccessModalOpen] = useState(false);
+    const [successModalType, setSuccessModalType] = useState("");
 
     const [errorModalOpen, setErrorModalOpen] = useState(false);
 
@@ -98,6 +99,17 @@ export default function Home(){
     const feedbackComment = useRef(null);
 
     const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(()=>{
+        if(location.state && Object.keys(location.state).length > 0){console.log("open success")
+            if(location.state?.successModalOpen){
+                setSuccessModalOpen(true);
+                setSuccessModalType(location.state.successModalType || "login");
+            }
+            navigate(location.pathname, {replace: true, state: {}}); // clear state
+        }
+    }, [location.state]);
 
     useEffect(()=>{
         async function checkAuth() {
@@ -135,6 +147,7 @@ export default function Home(){
                 feedbackService.current.value = null;
                 feedbackComment.current.value = null;
                 setSuccessModalOpen(true);
+                setSuccessModalType("feedback");
             } else if(result.status === "fail" && result.message === "auth"){
                 navigate("/auth/login", {state: {errorModalOpen: true}});
             } else{
@@ -162,7 +175,7 @@ export default function Home(){
                             <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">About</Link>
                             <img className="w-20" src={logoHuman} alt="Logo" />
                             <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out" to="/appointment">Appointment</Link>
-                            <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Profile</Link>
+                            <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out" to="/profile">Profile</Link>
                         </div>
                         <div className="flex gap-3 items-center text-black lg:text-white">
                             <FaInstagram className="w-5 cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out" onClick={()=>{window.open("https://instagram.com")}} />
@@ -176,12 +189,10 @@ export default function Home(){
                         {isOpenHamburgerMenu && (
                             <div className="absolute top-full left-0 w-full bg-white text-black z-10">
                                 <div className="flex flex-col gap-5 p-4">
-                                    <a className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out" href="./">Home</a>
-                                    <a className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">About</a>
-                                    <a className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Services</a>
-                                    <a className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Pricing</a>
-                                    <a className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Barber</a>
-                                    <a className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">Contact</a>
+                                    <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out" to="/">Home</Link>
+                                    <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out">About</Link>
+                                    <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out" to="/appointment">Appointment</Link>
+                                    <Link className="text-inherit no-underline cursor-pointer hover:text-yellow-700 transition-colors duration-300 ease-in-out" to="/profile">Profile</Link>
                                 </div>
                             </div>
                         )}
@@ -643,7 +654,7 @@ export default function Home(){
                     </div>
                     <p className="text-gray-500">© 2025 The Fade Hub is proudly powered by <span className="text-white underline underline-offset-4">Yeoh Jeh Herne</span></p>
                 </div>
-                <SuccessModal type="feedback" successModalOpen={successModalOpen} setSuccessModalOpen={setSuccessModalOpen} />
+                <SuccessModal type={successModalType} successModalOpen={successModalOpen} setSuccessModalOpen={setSuccessModalOpen} />
                 <ErrorModal type="error" errorModalOpen={errorModalOpen} setErrorModalOpen={setErrorModalOpen} />
             </div> }
         </>

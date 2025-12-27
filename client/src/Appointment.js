@@ -396,7 +396,7 @@ export default function Appointment(){
                                     from-black via-green-400 to-black'></div>
                                         <div className='relative z-10 h-full w-full flex flex-col gap-2 justify-center items-center bg-zinc-900/90 backdrop-blur-md rounded-xl'>
                                             <h1 className='relative z-10 font-hegarty font-bold text-2xl sm:text-4xl text-green-400'>
-                                                <span className="text-xl sm:text-2xl align-top mr-1">RM</span>{appointmentStats.totalMoneySpent}
+                                                <span className="text-xl sm:text-2xl align-top mr-1">RM</span>{appointmentStats.totalSpent}
                                             </h1>
                                             <h1 className='font-robotoCondensed text-sm text-white uppercase tracking-widest opacity-80 text-center'>
                                                 Invested in Style
@@ -633,7 +633,7 @@ function BarberQueue({ barberLiveQueue, currentUserId }){console.log(barberLiveQ
                     <div className='flex gap-4 items-center flex-1 min-w-0 mr-4'>
                         <div className='relative shrink-0'>
                             {barberLiveQueue.avatar ? (
-                                <img className='h-8 w-8 lg:h-12 lg:w-12 rounded-full object-cover border-2 border-yellow-600 p-[2px]' src={barberLiveQueue.avatar} alt="Barber" />
+                                <img className='h-8 w-8 lg:h-12 lg:w-12 rounded-full object-cover border-2 border-yellow-600 p-[2px]' src={barberLiveQueue.avatar} alt="Barber"  referrerPolicy="no-referrer" />
                             ) : (
                                 <div className='h-8 w-8 lg:h-12 lg:w-12 rounded-full bg-gray-200 border-2 border-yellow-600'></div>
                             )}

@@ -20,7 +20,8 @@ module.exports = {
         geom: ['Geom']
       },
       boxShadow: {
-        'glow-yellow': '0 0 20px 5px rgba(255, 193, 7, 0.3), 0 0 20px 10px rgba(255, 193, 7, 0.2)'
+        'glow-yellow-before': '0 0 5px 5px rgba(255, 193, 7, 0.3), 0 0 20px 10px rgba(255, 193, 7, 0.2)',
+        'glow-yellow-after': '0 0 20px 5px rgba(255, 193, 7, 0.3), 0 0 20px 10px rgba(255, 193, 7, 0.2)'
       },
       keyframes: {
         caroussel: {
@@ -49,7 +50,7 @@ module.exports = {
         'caroussel': 'caroussel 20s linear infinite',
         'fadeInSlide': 'fadeInSlide 1s ease-out forwards',
         'gradientSpin': 'gradientSpin 3s linear infinite',
-        'livePop': 'livePop 1s linear infinite',
+        'livePop': 'livePop 1s ease-in-out infinite',
       }
     },
   },

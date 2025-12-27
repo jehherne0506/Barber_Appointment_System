@@ -10,8 +10,11 @@ import PaymentSuccess from "./PaymentSuccess";
 import MakeAppointment from "./MakeAppointment";
 import RescheduleAppointment from "./RescheduleAppointment";
 import CancelAppointment from "./CancelAppointment";
+import Profile from "./Profile";
+import ChangeEmailFallback from "./ChangeEmailFallback";
 
 import StaffHome from "./staff/Home";
+import VerifyEmailSuccessFallback from "./VerifyEmailSuccessFallback";
 
 function App() {
   return (
@@ -21,12 +24,15 @@ function App() {
           <Route path="/auth/register" element={<Register />} />
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/verifyEmail/fail" element={<VerifyEmailFailFallback />} />
+          <Route path="/auth/verifyEmail/success" element={<VerifyEmailSuccessFallback />} />
           <Route path="/" element={<Home />} />
           <Route path="/appointment" element={<Appointment />} />
           <Route path="makeAppointment" element={<MakeAppointment />} />
           <Route path="/rescheduleAppointment" element={<RescheduleAppointment />} />
           <Route path="/cancelAppointment" element={<CancelAppointment />} />
           <Route path="/stripe/paymentSuccess" element={<PaymentSuccess />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/auth/login/changeEmailFallback" element={<ChangeEmailFallback />} />
 
           <Route path="/staff" element={<StaffHome />} />
         </Routes>

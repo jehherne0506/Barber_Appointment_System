@@ -34,13 +34,19 @@ export default function SuccessModal({ type, successModalOpen, setSuccessModalOp
 
                                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                                     <DialogTitle as="h3" className="text-xl font-geom font-semibold leading-6 text-white tracking-wide">
-                                        {type === "emailVerification" && "Email Sent"}
-                                        {type === "loginSuccess" && "Welcome Back"}
+                                        {type === "emailVerification" && "Email Verification sent to your gmail."}
+                                        {type === "emailVerified" && "Email Successfully Verified."}
+                                        {type === "login" && "Welcome Back"}
                                         {type === "makeAppointment" && "Booking Confirmed"}
                                         {type === "rescheduleAppointment" && "Reschedule Successful"}
                                         {type === "cancelAppointment" && "Cancellation Confirmed"}
                                         {type === "addPhoneNumber" && "Phone Number Saved"}
                                         {type === "feedback" && "Thank You"}
+                                        {type === "styleProfile" && "Style Profile Updated"}
+                                        {type === "changeEmail" && "Email Changed Successfully"}
+                                        {type === "changeEmailSuccess" && "Email Changed Successfully"}
+                                        {type === "unavailableTimeslot" && "Timeslot Removed Successfully"}
+                                        {type === "unavailableTimeslotRemove" && "Unavailable Timeslot Removed Successfully"}
                                     </DialogTitle>
                                     
                                     <div className="mt-2">
@@ -48,7 +54,8 @@ export default function SuccessModal({ type, successModalOpen, setSuccessModalOp
                                             {type === "emailVerification" && (
                                                 <>We have sent a verification link to <span className="text-white font-bold">{email}</span>. Please check your inbox to activate your account.</>
                                             )}
-                                            {type === "loginSuccess" && "You have successfully logged in. Welcome to Precision Cuts."}
+                                            {type === "emailVerified" && "Your email is verified. You may login now."}
+                                            {type === "login" && "You have successfully logged in. Welcome to The Fade Hub."}
                                             {type === "makeAppointment" && (
                                                 <>Your appointment has been successfully booked. A confirmation email has been sent to <span className="text-white">{email}</span>.</>
                                             )}
@@ -60,6 +67,11 @@ export default function SuccessModal({ type, successModalOpen, setSuccessModalOp
                                             )}
                                             {type === "addPhoneNumber" && "Your phone number has been updated. You will now receive SMS reminders for your appointments."}
                                             {type === "feedback" && "We appreciate your feedback! Your comments have been submitted to our team."}
+                                            {type === "styleProfile" && "Your Style Profile is successfully updated! Your barber will review it before your future appointment."}
+                                            {type === "changeEmail" && "Your Email is changed successfully! Please click on the link sent to your new gmail to verify it."}
+                                            {type === "changeEmailSuccess" && "Your Email is changed successfully! Please login again."}
+                                            {type === "unavailableTimeslot" && "Your timeslot has been removed. Customer can no longer book appointment within that time frame."}
+                                            {type === "unavailableTimeslotRemove" && "Your unavailable timeslot has been removed. Customer can now book appointment within that time frame."}
                                         </p>
                                     </div>
                                 </div>

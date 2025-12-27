@@ -3,7 +3,7 @@ import { GrPrevious } from "react-icons/gr";
 import { FaClock } from "react-icons/fa";
 import { FaCalendarDays } from "react-icons/fa6";
 
-export default function AppointmentStep3({ modalPage, setModalPage, dateSelected, setDateSelected, allTimeslot, timeslotSelected, setTimeslotSelected, type }){
+export default function AppointmentStep3({ modalPage, setModalPage, dateSelected, setDateSelected, allTimeslot, timeslotSelected, setTimeslotSelected, type="make" }){
     let monthCalendar = [];
     const dateAdd = new Date();
     const dayArray = ["Sun", "Mon", "Tue", "Wed", "Thur", "Fri", "Sat"];

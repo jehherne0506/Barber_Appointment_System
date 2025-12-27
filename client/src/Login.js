@@ -5,6 +5,7 @@ import logoImg from "./public/logoTransparent.png";
 import eyeOpen from "./public/eyeOpen.png";
 import eyeClose from "./public/eyeClose.png"
 import ErrorModal from "./ErrorModal";
+import SuccessModal from "./SuccessModal";
 
 export default function Login(){
     const [passwordView, setPasswordView] = useState(true);
@@ -14,6 +15,9 @@ export default function Login(){
     const navigate = useNavigate();
     const location = useLocation();
 
+    const [successModalOpen, setSuccessModalOpen] = useState(false);
+    const [successModalType, setSuccessModalType] = useState("");
+
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorModalType, setErrorModalType] = useState("error");
 
@@ -21,6 +25,10 @@ export default function Login(){
         if(location?.state?.errorModalOpen){
             setErrorModalOpen(true);
             setErrorModalType("auth");
+        }
+        if(location?.state?.successModalOpen){
+            setSuccessModalOpen(true);
+            setSuccessModalType(location?.state?.successModalType || "register");
         }
     }, [])
 
@@ -39,15 +47,17 @@ export default function Login(){
         if(result.status === "success"){
             if(result.role === "ADMIN"){
                 navigate("/admin")
+            } else if(result.role === "STAFF"){
+                navigate("/staff", {state: {successModalOpen: true, successModalType: "login"}});
             } else{
-                navigate("/");
+                navigate("/", {state: {successModalOpen: true, successModalType: "login"}});
             }
         } else if(result.status === "fail" && result.message === "emailNotVerified"){
             setErrorModalOpen(true);
             setErrorModalType("emailNotVerified");
-        } else if(result.status === "fail" && result.message === "passwordNotMatch"){
+        } else if(result.status === "fail" && result.message === "notMatch"){
             setErrorModalOpen(true);
-            setErrorModalType("passwordNotMatch");
+            setErrorModalType("notMatch");
         } else{
             setErrorModalOpen(true);
             setErrorModalType("error");
@@ -93,6 +103,7 @@ export default function Login(){
                     </div>
                 </div>
             </div>
+            <SuccessModal type={successModalType} successModalOpen={successModalOpen} setSuccessModalOpen={setSuccessModalOpen} />
             <ErrorModal type={errorModalType} errorModalOpen={errorModalOpen} setErrorModalOpen={setErrorModalOpen} />
         </div>
     )

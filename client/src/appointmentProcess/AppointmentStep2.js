@@ -15,7 +15,7 @@ export default function AppointmentStep2({ modalPage, setModalPage, allServices,
                 <div className='flex flex-wrap justify-center gap-20 mb-10'>
                     {allServices?.find(service => service._id === serviceIdSelected)?.staff.map((staff, idx)=>(
                         <div key={idx} onClick={()=>{setStaffIdSelected(staff._id)}} className='relative cursor-pointer flex flex-col gap-4 justify-center items-center'>
-                            <img className={`rounded-full w-32 aspect-square border-4 hover:scale-105 transition-all duration-300 ease-in-out ${staffIdSelected === staff._id ? "border-yellow-600 scale-110" : "border-gray-600"}`} src={staff.avatar} alt='Staff Avatar' />
+                            <img referrerPolicy="no-referrer" className={`rounded-full w-32 aspect-square border-4 hover:scale-105 transition-all duration-300 ease-in-out ${staffIdSelected === staff._id ? "border-yellow-600 scale-110" : "border-gray-600"}`} src={staff.avatar} alt='Staff Avatar' />
                             <img className={`absolute w-[40px] bottom-8 right-3 p-2 rounded-full bg-yellow-600 ${staffIdSelected !== staff._id ? "hidden" : null}`} src={check} alt='Check Icon' />
                             <h1 className={`font-geom text-lg ${staffIdSelected === staff._id ? "text-yellow-600" : null}`}>{staff.username}</h1>
                         </div>

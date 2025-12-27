@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import fetchWithRateLimit from "./fetchWithRateLimit";
 
 import 'react-phone-number-input/style.css'
@@ -8,17 +9,33 @@ import logoImg from "./public/logoTransparent.png";
 import eyeOpen from "./public/eyeOpen.png";
 import eyeClose from "./public/eyeClose.png"
 
+import ErrorModal from "./ErrorModal";
+
 export default function Register(){
     const [passwordView, setPasswordView] = useState(true);
     let usernameRef = useRef(null);
     let emailRef = useRef(null);
     let passwordRef = useRef(null);
     const [phoneNumber, setPhoneNumber] = useState("");
+    const [validPhoneNumber, setValidPhoneNumber] = useState(true);
+
+    const [errorModalOpen, setErrorModalOpen] = useState(false);
+    const [errorModalType, setErrorModalType] = useState("");
+
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(()=>{
+        if(location?.state?.errorModalOpen){
+            setErrorModalOpen(true);
+            setErrorModalType(location.state.errorModalType || "error");
+        }
+    }, [])
 
     async function handleSubmit(e){console.log("submit")
         e.preventDefault();
         if(!isValidPhoneNumber(phoneNumber)){
-            // error modal
+            setValidPhoneNumber(false);
             return;
         }
         const response = await fetchWithRateLimit("http://localhost:5000/auth/register", {
@@ -31,12 +48,14 @@ export default function Register(){
         
         const result = await response.json();
         if(result.status === "success"){
-            console.log("ok");
+            navigate("/auth/login", {state: {successModalOpen: true, successModalType: "emailVerification"}})
         } else{
             if(result.message === "email"){
-                console.log("Email is Registered.");
+                setErrorModalOpen(true);
+                setErrorModalType("emailRegistered");
             } else{
-                console.log("An Error has Occured.");
+                setErrorModalOpen(true);
+                setErrorModalType("error");
             }
         }
     }
@@ -79,8 +98,14 @@ export default function Register(){
                                     width: '100%',
                                     height: '100%'
                                 }}
+                                required
                                  />
                             </div>
+                            {!validPhoneNumber && (
+                                <p className="mt-2 text-sm text-red-500 font-bold animate-pulse">
+                                    Please enter a valid phone number.
+                                </p>
+                            )}
                         </div>
                         <button type="submit" className="bg-yellow-500 py-4 mb-2 border-yellow-600 border-2 w-full font-bold text-lg rounded-md">Register</button>
                     </form>
@@ -100,6 +125,7 @@ export default function Register(){
                     <img className="w-full h-full object-cover opacity-80" src="https://images.pexels.com/photos/7518736/pexels-photo-7518736.jpeg" alt="Barber Service" />
                 </div>  
             </div>
+            {errorModalOpen && <ErrorModal type={errorModalType} errorModalOpen={errorModalOpen} setErrorModalOpen={setErrorModalOpen} />}
         </div>
     )
 }

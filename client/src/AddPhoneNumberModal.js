@@ -10,7 +10,7 @@ import { isValidPhoneNumber } from 'react-phone-number-input'
 import checkAuthenticated from './checkAuthenticated';
 import fetchWithRateLimit from './fetchWithRateLimit';
 
-export default function AddPhoneNumberModal({ phoneNumberModalOpen, setPhoneNumberModalOpen, setHavePhoneNumber, setSuccessModalOpen }){
+export default function AddPhoneNumberModal({ phoneNumberModalOpen, setPhoneNumberModalOpen, setHavePhoneNumber, setSuccessModalOpen, setProfileData=null }){
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const userRef = useRef(null);
 
@@ -50,6 +50,9 @@ export default function AddPhoneNumberModal({ phoneNumberModalOpen, setPhoneNumb
 
         const result = await response.json();
         if(result.status === "success"){ 
+            if(setProfileData){
+                setProfileData(prevProfileData => ({...prevProfileData, phoneNumber: phoneNumber}));
+            }
             setHavePhoneNumber(true);
             setPhoneNumberModalOpen(false);
             setSuccessModalOpen();
@@ -57,7 +60,11 @@ export default function AddPhoneNumberModal({ phoneNumberModalOpen, setPhoneNumb
             navigate("/auth/login", {state: {errorModalOpen: true}});
         } else{
             setPhoneNumberModalOpen(false);
-            navigate("/appointment", {state: {errorModalOpen: true, errorModalType: "error"}})
+            if(setProfileData){
+                navigate("/profile", {state: {errorModalOpen: true, errorModalType: "error"}})
+            } else{
+                navigate("/appointment", {state: {errorModalOpen: true, errorModalType: "error"}})
+            }
         }
     };
 
@@ -97,7 +104,7 @@ export default function AddPhoneNumberModal({ phoneNumberModalOpen, setPhoneNumb
 
                                             <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                                                 <DialogTitle as="h3" className="text-xl font-geom font-semibold leading-6 text-white tracking-wide">
-                                                    Add Phone Number
+                                                    {setProfileData ? "Change" : "Add"} Phone Number
                                                 </DialogTitle>
                                                 
                                                 <div className="mt-2">
@@ -127,7 +134,8 @@ export default function AddPhoneNumberModal({ phoneNumberModalOpen, setPhoneNumb
                                     <div className="bg-neutral-800/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-neutral-800">
                                         <button
                                             type="submit"
-                                            className="inline-flex w-full justify-center rounded-lg bg-yellow-600 px-3 py-2 text-sm font-bold text-black shadow-sm hover:bg-yellow-500 sm:ml-3 sm:w-auto transition-colors"
+                                            className="inline-flex w-full justify-center rounded-lg bg-yellow-600 px-3 py-2 text-sm font-bold text-black shadow-sm hover:bg-yellow-500 sm:ml-3 sm:w-auto transition-colors disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed"
+                                            disabled={!phoneNumber || phoneNumber === ""}
                                         >
                                             Save Number
                                         </button>

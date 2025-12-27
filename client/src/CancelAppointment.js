@@ -33,6 +33,7 @@ export default function CancelAppointment(){
     const [cancelAppointmentModalOpen, setCancelAppointmentModalOpen] = useState(false);
 
     const [errorModalOpen, setErrorModalOpen] = useState(false);
+    const [isOpenHamburgerMenu, setOpenHamburgerMenu] = useState(false);
 
     useEffect(()=>{
         async function checkAuth() {
@@ -108,7 +109,7 @@ export default function CancelAppointment(){
             {isAuthenticated &&
                 <>
                     <Toaster position='top-right' />
-                    <Header />
+                    <Header isOpenHamburgerMenu={isOpenHamburgerMenu} setOpenHamburgerMenu={setOpenHamburgerMenu} />
                     <div className='w-full bg-cover bg-center font-bartle py-32 px-10 flex flex-col gap-2 relative' style={{backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${makeAppointmentPage1})`}}>
                         <h1 className='text-white text-2xl break-words md:text-5xl'>Precision Cuts</h1>
                         <h2 className='text-yellow-600 text-xl break-words md:text-4xl'>& Classic Shaves</h2>
