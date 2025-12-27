@@ -46,7 +46,7 @@ app.set("view engine", "ejs");
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "http://https://barber-appointment-system-1.onrender.com/",
     credentials: true
   }
 });
@@ -127,7 +127,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: "http://https://barber-appointment-system-1.onrender.com/",
   credentials: true
 }));
 app.use(limiter);
@@ -189,11 +189,11 @@ app.get('/auth/google/callback',
     const {jwtRefreshToken, jwtAccessToken} = req.authInfo; 
     generateCookie(res, jwtRefreshToken, jwtAccessToken); 
     if(req.user.role === "ADMIN"){
-      return res.redirect("http://localhost:3000/admin");
+      return res.redirect("http://https://barber-appointment-system-1.onrender.com//admin");
     } else if(req.user.role === "STAFF"){
-      return res.redirect("http://localhost:3000/staff");
+      return res.redirect("http://https://barber-appointment-system-1.onrender.com//staff");
     } else{
-      return res.redirect("http://localhost:3000/");
+      return res.redirect("http://https://barber-appointment-system-1.onrender.com//");
     }
   });
 
@@ -249,17 +249,17 @@ app.get('/auth/facebook',
   passport.authenticate('facebook', {session: false, scope: ['email']}));
 
 app.get('/auth/facebook/callback',
-  passport.authenticate('facebook', { failureRedirect: 'http://localhost:3000/auth/login', session: false }),
+  passport.authenticate('facebook', { failureRedirect: 'http://https://barber-appointment-system-1.onrender.com//auth/login', session: false }),
   function(req, res) {
     // Successful authentication, redirect home.
     const {jwtRefreshToken, jwtAccessToken} = req.authInfo;
     generateCookie(res, jwtRefreshToken, jwtAccessToken);
     if(req.user.role === "ADMIN"){
-      return res.redirect("http://localhost:3000/admin");
+      return res.redirect("http://https://barber-appointment-system-1.onrender.com//admin");
     } else if(req.user.role === "STAFF"){
-      return res.redirect("http://localhost:3000/staff");
+      return res.redirect("http://https://barber-appointment-system-1.onrender.com//staff");
     } else{
-      return res.redirect("http://localhost:3000/");
+      return res.redirect("http://https://barber-appointment-system-1.onrender.com//");
     }
   });
 
@@ -324,7 +324,7 @@ app.get('/auth/verifyEmail', async(req,res)=>{
       } else{
         console.log("Cannot decode token to extract email");
       }
-      return res.redirect("http://localhost:3000/auth/verifyEmail/fail");
+      return res.redirect("http://https://barber-appointment-system-1.onrender.com//auth/verifyEmail/fail");
     } else{
       const email = token_data.email;
       try{
@@ -335,11 +335,11 @@ app.get('/auth/verifyEmail', async(req,res)=>{
         if(user){
           user.emailVerified = true;
           await user.save();
-          res.redirect("http://localhost:3000/auth/verifyEmail/success");
+          res.redirect("http://https://barber-appointment-system-1.onrender.com//auth/verifyEmail/success");
         }
       } catch(err){
         console.log(err);
-        return res.redirect("http://localhost:3000/auth/verifyEmail/fail");
+        return res.redirect("http://https://barber-appointment-system-1.onrender.com//auth/verifyEmail/fail");
       }
     }
   })
@@ -750,11 +750,11 @@ app.post("/appointment/makeAppointment", verifyUser, async(req,res)=>{
 });
 
 app.get("/appointment/paymentSuccess", async(req,res)=>{
-  return res.redirect("http://localhost:3000/stripe/paymentSuccess");
+  return res.redirect("http://https://barber-appointment-system-1.onrender.com//stripe/paymentSuccess");
 });
 
 app.get("/appointment/paymentFailure", async(req,res)=>{
-  return res.redirect("http://localhost:3000/stripe/paymentFailure");
+  return res.redirect("http://https://barber-appointment-system-1.onrender.com//stripe/paymentFailure");
 });
 
 app.put("/appointment/rescheduleAppointment", verifyUser, async(req,res)=>{
@@ -1003,7 +1003,7 @@ app.get("/verifyEmailChange", async(req,res)=>{
         userFound.email = userFound.tempEmail;
         userFound.emailVerified = true;
         await userFound.save();
-        res.redirect("http://localhost:3000/auth/login/changeEmailFallback")
+        res.redirect("http://https://barber-appointment-system-1.onrender.com//auth/login/changeEmailFallback")
       } return res.json({status: "fail", message: "error"});
     }
   } catch(err){
