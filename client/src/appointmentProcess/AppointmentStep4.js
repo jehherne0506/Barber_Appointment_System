@@ -59,23 +59,23 @@ export default function AppointmentStep4({ modalPage, setModalPage, handleSubmit
                         </div>
                     </div>
                 </div>
-                <div className='flex justify-between'>
+                <div className='flex flex-col lg:flex-row gap-5 lg:gap-0 justify-between'>
                     <button className="flex gap-2 justify-center items-center py-4 px-2 sm:px-8 sm:py-4 rounded-lg cursor-pointer bg-yellow-600 text-black disabled:text-white disabled:bg-neutral-700 disabled:opacity-50" disabled={modalPage===1 || type !== "make"} onClick={()=>{setModalPage(prevPage => prevPage - 1)}}>
                         <GrPrevious />
-                        <span>Previous</span>
+                        <span className='text-sm lg:text-lg'>Previous</span>
                     </button>
 
                     
                         {type === "make" &&
-                            <div className='flex gap-5'>
+                            <div className='flex flex-col lg:flex-row gap-5'>
                                 <button
                                     type="submit"
                                     name='paymentMethod'
                                     value="store"
                                     data-autofocus
-                                    className="flex gap-2 justify-center items-center py-4 px-2 sm:px-8 sm:py-4 rounded-lg cursor-pointer bg-yellow-600 text-black disabled:text-white disabled:bg-neutral-700 disabled:opacity-50" disabled={modalPage===1}
+                                    className="flex gap-2 justify-center items-center py-4 px-2 sm:px-8 sm:py-4 rounded-lg cursor-pointer bg-yellow-600 text-black disabled:text-white disabled:bg-neutral-700 disabled:opacity-50 text-sm lg:text-lg" disabled={modalPage===1}
                                 >
-                                    <BsCash className='text-xl' />
+                                    <BsCash />
                                     Pay in Store
                                 </button>
                                 <button
@@ -83,10 +83,10 @@ export default function AppointmentStep4({ modalPage, setModalPage, handleSubmit
                                     name='paymentMethod'
                                     value="stripe"
                                     data-autofocus
-                                    className="flex gap-2 justify-center items-center py-4 px-2 sm:px-8 sm:py-4 rounded-lg cursor-pointer bg-yellow-600 text-black disabled:bg-neutral-700 disabled:opacity-50" disabled={modalPage===1}
+                                    className="flex gap-2 justify-center items-center py-4 px-2 sm:px-8 sm:py-4 rounded-lg cursor-pointer bg-yellow-600 text-black disabled:bg-neutral-700 disabled:opacity-50 text-sm lg:text-lg" disabled={modalPage===1}
 
                                 >
-                                    <FaStripe className='text-xl' />
+                                    <FaStripe />
                                     Pay Now with Stripe
                                 </button>
                             </div>

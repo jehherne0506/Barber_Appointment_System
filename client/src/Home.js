@@ -30,6 +30,7 @@ import haircut from "./public/haircut.svg";
 import shave from "./public/shave.png";
 import styling from "./public/style.svg";
 import trimming from "./public/trim.svg";
+import locationIcon from "./public/location.png";
 import moustache from "./public/moustache.png";
 import manager  from "./public/manager.jpg";
 import close from "./public/close.png";
@@ -563,11 +564,11 @@ export default function Home(){
                             <hr></hr>
                             <div className="group flex gap-2 justify-center cursor-pointer" onClick={()=>{window.open("https://maps.app.goo.gl/YMLyMtZyqH2yqkQN9")}}>
                                 <img className="w-6 text-white transition-all duration-500 ease-in-out 
-                                group-hover:translate-x-4 group-hover:opacity-0 group-hover:w-0" src={location} alt="Location Icon Left" />
+                                group-hover:translate-x-4 group-hover:opacity-0 group-hover:w-0" src={locationIcon} alt="Location Icon Left" />
                                 <p className="font-robotoCondensed text-white">SHOW ON GOOGLE MAP</p>
                                 <div className="w-0 overflow-hidden transition-all duration-500 ease-in-out
                                 group-hover:w-6 group-hover:opacity-100">
-                                    <img className="w-6 min-w-[1.5rem] text-white" src={location} alt="Location Icon Right" />
+                                    <img className="w-6 min-w-[1.5rem] text-white" src={locationIcon} alt="Location Icon Right" />
                                 </div>
                             </div>
                         </div>
