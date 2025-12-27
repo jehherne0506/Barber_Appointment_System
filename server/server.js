@@ -42,6 +42,7 @@ let redisClient = connectRedisCache();
 const CACHE_EXPIRATION = 3600;
 
 const app = express();
+app.set("trust proxy", 1);
 app.set("view engine", "ejs");
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -127,7 +128,10 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cors({
-  origin: "https://barber-appointment-system-1.onrender.com",
+  origin: [
+    "http://localhost:3000",
+    "https://barber-appointment-system-1.onrender.com",
+  ],
   credentials: true
 }));
 app.use(limiter);
