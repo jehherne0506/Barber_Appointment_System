@@ -40,7 +40,6 @@ const limiter = rateLimit({
 });
 
 let redisClient = connectRedisCache();
-const CACHE_EXPIRATION = 3600;
 
 const app = express();
 app.set("trust proxy", 1);
@@ -694,7 +693,7 @@ app.post("/appointment/makeAppointment", verifyUser, async(req,res)=>{
 
       const userFound = await User.findById(customerId);
       if(userFound){
-        const voucherToUpdate = userFound.vouchers.find(voucher => voucher.voucherId.toString() === voucherId);
+        const voucherToUpdate = userFound.vouchers.find(voucher => voucher.voucherId.toString() === voucherId && !voucher.isUsed);
         voucherToUpdate.isUsed = true;
         await userFound.save()
       }
@@ -772,7 +771,7 @@ app.post("/appointment/makeAppointment", verifyUser, async(req,res)=>{
         const sessionURL = await stripePayment(service, newAppointment);
         return res.json({status: "success", message: sessionURL});
       } else{
-        const appointmentSend = await Appointment.findOne({_id: newAppointment._id}).populate("customerId", "username email").populate("serviceId", "name price").populate("staffId", "_id username");
+        const appointmentSend = await Appointment.findOne({_id: newAppointment._id}).populate("customerId", "username email styleProfile").populate("serviceId", "name price").populate("staffId", "_id username");
         sendMakeAppointmentDetails(appointmentSend, customerEmail);
 
         io.emit("newAppointment", appointmentSend);
@@ -1016,7 +1015,7 @@ app.get("/userVoucher", verifyUser, async(req,res)=>{
         return res.json({status: "fail", message: "auth"});
       };
 
-      const availableVouchers = userFound.vouchers.filter(voucher => !voucher.isUsed);
+      const availableVouchers = userFound.vouchers.filter(voucher => !voucher.isUsed);console.log(availableVouchers)
       const usedVouchers = userFound.vouchers.filter(voucher => voucher.isUsed);
 
       return res.json({status: "success", message: {availableVouchers, usedVouchers}})

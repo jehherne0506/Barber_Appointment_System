@@ -38,7 +38,6 @@ export default function Appointment(){
     const [errorModalOpen, setErrorModalOpen] = useState(false);
 
     const [view, setView] = useState(1);
-    const [myVouchers, setMyVouchers] = useState(null);
 
     const [isOpenHamburgerMenu, setOpenHamburgerMenu] = useState(false);
 
