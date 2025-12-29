@@ -23,7 +23,7 @@ const Voucher = require("./models/voucher");
 const connectMongoose = require('./connectMongoose');
 const generateCookie = require('./generateCookie');
 const {sendVerificationEmail, sendMakeAppointmentDetails, sendRescheduleAppointmentDetails, sendDeleteAppointmentDetails, sendAppointmentInProgress, sendAppointmentCompleted, sendFeedback, sendVerifyEmailChange} = require('./sendEmail');
-const {verifyUser, verifyStaff, verifyAdmin} = require('./auth');
+const {verifyUser, verifyStaff} = require('./auth');
 const generateTimeslot = require('./generateTimeslot');
 const stripePayment = require('./stripePayment');
 const scheduleSMS = require('./scheduleSMS');
@@ -202,9 +202,7 @@ app.get('/auth/google/callback',
     // Successful authentication, redirect home.
     const {jwtRefreshToken, jwtAccessToken} = req.authInfo; 
     generateCookie(res, jwtRefreshToken, jwtAccessToken); 
-    if(req.user.role === "ADMIN"){
-      return res.redirect("https://barber-appointment-system-1.onrender.com/admin");
-    } else if(req.user.role === "STAFF"){
+    if(req.user.role === "STAFF"){
       return res.redirect("https://barber-appointment-system-1.onrender.com/staff");
     } else{
       return res.redirect("https://barber-appointment-system-1.onrender.com/");
@@ -268,9 +266,7 @@ app.get('/auth/facebook/callback',
     // Successful authentication, redirect home.
     const {jwtRefreshToken, jwtAccessToken} = req.authInfo;
     generateCookie(res, jwtRefreshToken, jwtAccessToken);
-    if(req.user.role === "ADMIN"){
-      return res.redirect("https://barber-appointment-system-1.onrender.com/admin");
-    } else if(req.user.role === "STAFF"){
+    if(req.user.role === "STAFF"){
       return res.redirect("https://barber-appointment-system-1.onrender.com/staff");
     } else{
       return res.redirect("https://barber-appointment-system-1.onrender.com/");

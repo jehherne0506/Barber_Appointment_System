@@ -44,7 +44,7 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         default: "CUSTOMER",
-        enum: ["CUSTOMER", "STAFF", "ADMIN"]
+        enum: ["CUSTOMER", "STAFF"]
     },
     styleProfile: {
         hairType: {

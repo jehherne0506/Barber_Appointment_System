@@ -46,9 +46,7 @@ export default function Login(){
 
         const result = await response.json();console.log(result)
         if(result.status === "success"){
-            if(result.role === "ADMIN"){
-                navigate("/admin")
-            } else if(result.role === "STAFF"){
+            if(result.role === "STAFF"){
                 navigate("/staff", {state: {successModalOpen: true, successModalType: "login"}});
             } else{
                 navigate("/", {state: {successModalOpen: true, successModalType: "login"}});

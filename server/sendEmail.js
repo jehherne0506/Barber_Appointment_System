@@ -590,7 +590,7 @@ function generateAdminFeedbackNotificationTemplate(feedback) {
         </div>
 
         <div style="margin-top: 25px; text-align: center;">
-            <a href="#" style="background: #34495e; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-size: 14px;">View in Admin Panel</a>
+            <a href="https://barber-appointment-system-1.onrender.com/staff" style="background: #34495e; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-size: 14px;">View in Admin Panel</a>
         </div>
       </div>
     </div>
