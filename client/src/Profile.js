@@ -480,6 +480,78 @@ export default function Profile(){
                             </div>
                         </div>
                     </div>
+
+                    <div className="relative overflow-hidden bg-neutral-900/80 border border-yellow-600/30 rounded-xl p-6 mt-10 shadow-[0_0_15px_-5px_rgba(202,138,4,0.3)]">
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-yellow-600/10 rounded-full blur-2xl"></div>
+
+                        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div className="text-center md:text-left">
+                                <h1 className="font-bartle text-white text-2xl md:text-3xl">
+                                    Used Vouchers
+                                </h1>
+                            </div>
+
+                            <div className="flex flex-col items-center md:items-end">
+                                <p className="font-hegarty text-5xl md:text-6xl text-yellow-500 drop-shadow-sm leading-none">
+                                    {myVouchers.usedVouchers.length || 0}
+                                </p>
+                                <p className="text-yellow-600/80 font-robotoCondensed text-xs uppercase tracking-widest mt-1">
+                                    Redeemed
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+                            {myVouchers.usedVouchers && myVouchers.usedVouchers.map((voucher, idx) => (
+                                <div key={idx} className="group relative flex flex-col justify-between p-6 bg-neutral-900/80 border border-neutral-700 rounded-xl overflow-hidden hover:border-yellow-600/50 hover:shadow-[0_0_20px_-10px_rgba(202,138,4,0.3)] transition-all duration-300">
+
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-600/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                                    <div className="flex flex-col gap-1 mb-6 text-left">
+                                        <div className="flex flex-row flex-wrap gap-x-5">
+                                            <div className="w-fit mb-2 px-3 py-1 rounded-full bg-yellow-900/20 border border-yellow-700/50 transition-colors">
+                                                <p className="font-robotoCondensed text-xs font-bold text-yellow-600 uppercase tracking-widest">
+                                                    {voucher.voucherId.pointsRequired} PTS
+                                                </p>
+                                            </div>
+                                            {voucher.expiredAt &&
+                                                <div className="w-fit mb-2 px-3 py-1 rounded-full bg-orange-900/20 border border-orange-700/50">
+                                                    <p className="font-robotoCondensed text-xs font-bold text-orange-500 uppercase tracking-widest">
+                                                        Till {voucher.voucherId.expiredAt.split("T")[0]}
+                                                    </p>
+                                                </div>
+                                            }
+                                            {voucher.limitCount !== undefined ?
+                                                <div className="w-fit mb-2 px-3 py-1 rounded-full bg-emerald-900/20 border border-emerald-700/50">
+                                                    <p className="font-robotoCondensed text-xs font-bold text-emerald-500 uppercase tracking-widest">
+                                                        Limit: {voucher.voucherId.limitCount}
+                                                    </p>
+                                                </div>
+                                                :
+                                                <div className="w-fit mb-2 px-3 py-1 rounded-full bg-neutral-800 border border-neutral-600">
+                                                    <p className="font-robotoCondensed text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                                        Unlimited
+                                                    </p>
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <h1 className="font-geom xl:font-bartle text-xl text-white group-hover:text-yellow-500 transition-colors">
+                                            {voucher.voucherId.name}
+                                        </h1>
+
+                                        <p className="font-sans text-sm text-gray-400">
+                                            {voucher.voucherId.description}
+                                        </p>
+
+                                        <p className="font-sans text-sm text-gray-400">
+                                            Redeemed At {voucher.redeemedAt.split("T")[0]}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
                     {errorModalOpen && <ErrorModal type="error" errorModalOpen={errorModalOpen} setErrorModalOpen={setErrorModalOpen} />}
                     {successModalOpen && <SuccessModal type={successModalType} successModalOpen={successModalOpen} setSuccessModalOpen={setSuccessModalOpen} />}
