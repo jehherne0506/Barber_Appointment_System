@@ -86,6 +86,8 @@ userSchema.virtual('appointments', {
     foreignField: "customerId",
 });
 
+userSchema.index({email: 1});
+
 const User = mongoose.model("User", userSchema);
 
 module.exports = User;

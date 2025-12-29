@@ -32,6 +32,7 @@ const unavailableTimeslotSchema = new mongoose.Schema({
 });
 
 unavailableTimeslotSchema.index({staffId: 1});
+unavailableTimeslotSchema.index({staffId: 1, date: 1});
 
 const UnavailableTimeslot = mongoose.model("UnavailableTimeslot", unavailableTimeslotSchema);
 
