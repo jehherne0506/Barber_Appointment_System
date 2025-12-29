@@ -11,6 +11,7 @@ import makeAppointmentPage1 from "./public/makeAppointmentPage1.avif";
 import fetchWithRateLimit from './fetchWithRateLimit';
 import CancelAppointmentModal from './CancelAppointmentModal';
 import ErrorModal from './ErrorModal';
+import API_URL from './config';
 
 export default function CancelAppointment(){
     const navigate = useNavigate();
@@ -47,7 +48,7 @@ export default function CancelAppointment(){
 
     useEffect(()=>{
         async function fetchServices(){
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/appointment/services", {
+            const response = await fetchWithRateLimit(`${API_URL}/appointment/services`, {
                 method: "GET",
                 credentials: "include"
             });
@@ -83,7 +84,7 @@ export default function CancelAppointment(){
     async function handleSubmit(e){
         e.preventDefault();
         setCancelAppointmentModalOpen(false);
-        const response = await fetch("https://barber-appointment-system-g7f5.onrender.com/appointment/cancelAppointment", {
+        const response = await fetch(`${API_URL}/appointment/cancelAppointment`, {
             method: "DELETE",
             credentials: "include",
             headers: {
@@ -136,7 +137,7 @@ export default function CancelAppointment(){
 
                         {
                             service && staff && total && dateSelected && timeslotSelected &&
-                            <AppointmentStep4 modalPage={modalPage} setModalPage={setModalPage} handleSubmit={(e)=>{e.preventDefault(); setCancelAppointmentModalOpen(true)}} service={service} staff={staff} total={total} staffIdSelected={staffIdSelected} dateSelected={dateSelected} timeslotSelected={timeslotSelected} type="cancel" />
+                            <AppointmentStep4 modalPage={modalPage} setModalPage={setModalPage} handleSubmit={(e)=>{e.preventDefault(); setCancelAppointmentModalOpen(true)}} service={service} staff={staff} total={total} staffIdSelected={staffIdSelected} dateSelected={dateSelected} timeslotSelected={timeslotSelected} type="cancel" appointmentId={appointmentId} />
                         }
 
                         {cancelAppointmentModalOpen &&

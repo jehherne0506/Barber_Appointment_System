@@ -11,6 +11,7 @@ import checkAuthenticated from './checkAuthenticated';
 import makeAppointmentPage1 from "./public/makeAppointmentPage1.avif";
 import fetchWithRateLimit from './fetchWithRateLimit';
 import ErrorModal from './ErrorModal';
+import API_URL from './config';
 
 export default function RescheduleAppointment(){
     const navigate = useNavigate();
@@ -46,7 +47,7 @@ export default function RescheduleAppointment(){
 
     useEffect(()=>{
         async function fetchServices(){
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/appointment/services", {
+            const response = await fetchWithRateLimit(`${API_URL}/appointment/services`, {
                 method: "GET",
                 credentials: "include"
             });
@@ -69,7 +70,7 @@ export default function RescheduleAppointment(){
 
     useEffect(()=>{
         async function fetchStaffTimeslot(){
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/appointment/timeslot", {
+            const response = await fetchWithRateLimit(`${API_URL}/appointment/timeslot`, {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -112,7 +113,7 @@ export default function RescheduleAppointment(){
     async function handleSubmit(e){
         e.preventDefault();
         console.log('start fetch')
-        const response = await fetch("https://barber-appointment-system-g7f5.onrender.com/appointment/rescheduleAppointment", {
+        const response = await fetch(`${API_URL}/appointment/rescheduleAppointment`, {
             method: "PUT",
             credentials: "include",
             headers: {
@@ -171,7 +172,7 @@ export default function RescheduleAppointment(){
 
                         {
                             service && staff && total && dateSelected && timeslotSelected && modalPage === 4 &&
-                            <AppointmentStep4 modalPage={modalPage} setModalPage={setModalPage} handleSubmit={handleSubmit} service={service} staff={staff} total={total} staffIdSelected={staffIdSelected} dateSelected={dateSelected} timeslotSelected={timeslotSelected} type="reschedule" />
+                            <AppointmentStep4 modalPage={modalPage} setModalPage={setModalPage} handleSubmit={handleSubmit} appointmentId={appointmentId} serviceName={service} serviceIdSelected={serviceIdSelected} staff={staff} total={total} staffIdSelected={staffIdSelected} dateSelected={dateSelected} timeslotSelected={timeslotSelected} type="reschedule" />
                         }
                     </div>
                     <ErrorModal type={errorModalType} errorModalOpen={errorModalOpen} setErrorModalOpen={setErrorModalOpen} />

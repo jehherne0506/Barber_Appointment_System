@@ -67,7 +67,7 @@ export default function ConfirmPaymentModal({ confirmPaymentModalOpen, setConfir
                                                     </p>
                                                     <p>is making a payment of</p>
                                                     <p className="text-2xl text-white font-geom font-bold mt-1">
-                                                        RM {appointment.serviceId.price}
+                                                        RM {appointment.finalPrice.toFixed(2)}
                                                     </p>
                                                 </div>
                                             </div>

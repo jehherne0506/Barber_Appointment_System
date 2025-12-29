@@ -56,6 +56,28 @@ const userSchema = new mongoose.Schema({
             type: String,
             default: null
         }
+    },
+    points: {
+        type: Number,
+        default: 0
+    },
+    vouchers: {
+        type: [{
+            voucherId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Voucher',
+                required: true
+            },
+            redeemedAt: {
+                type: Date,
+                default: Date.now
+            },
+            isUsed: {
+                type: Boolean,
+                default: false
+            }
+        }],
+        default: []
     }}, {timestamps: true, toJSON: {virtuals: true}, toObject: {virtuals: true}});
 
 userSchema.virtual('appointments', {

@@ -17,6 +17,10 @@ const serviceSchema = new mongoose.Schema({
         type: Number,
         min: 0
     },
+    points: {
+        type: Number,
+        min: 0
+    },
     staff: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"

@@ -32,8 +32,8 @@
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_API_KEY);
 
-async function stripePayment(service, appointmentId, email){  
-  const appointmentIdString = String(appointmentId);
+async function stripePayment(service, appointment){  
+  const appointmentIdString = String(appointment._id);
 
   const session = await stripe.checkout.sessions.create({
     success_url: `https://barber-appointment-system-g7f5.onrender.com/appointment/paymentSuccess`,
@@ -48,7 +48,7 @@ async function stripePayment(service, appointmentId, email){
         price_data: {
           currency: "myr",
           product_data: { name: service.name },
-          unit_amount: service.price * 100
+          unit_amount: appointment.finalPrice * 100
         },
         quantity: 1
       }

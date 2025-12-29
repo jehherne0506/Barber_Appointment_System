@@ -9,6 +9,7 @@ import { isValidPhoneNumber } from 'react-phone-number-input'
 
 import checkAuthenticated from './checkAuthenticated';
 import fetchWithRateLimit from './fetchWithRateLimit';
+import API_URL from './config';
 
 export default function AddPhoneNumberModal({ phoneNumberModalOpen, setPhoneNumberModalOpen, setHavePhoneNumber, setSuccessModalOpen, setProfileData=null }){
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -39,7 +40,7 @@ export default function AddPhoneNumberModal({ phoneNumberModalOpen, setPhoneNumb
             return;
         }
 
-        const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/addPhoneNumber", {
+        const response = await fetchWithRateLimit(`${API_URL}/addPhoneNumber`, {
             method: "POST",
             credentials: "include",
             headers: {

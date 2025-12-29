@@ -17,7 +17,18 @@ const unavailableTimeslotSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    reason: String
+    startedAtDate: {
+        type: Date,
+        required: true
+    },
+    endedAtDate: {
+        type: Date,
+        required: true
+    },
+    reason: {
+        type: String,
+        required: true
+    }
 });
 
 unavailableTimeslotSchema.index({staffId: 1});

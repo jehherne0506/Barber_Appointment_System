@@ -13,6 +13,7 @@ import checkAuthenticated from './checkAuthenticated';
 import fetchWithRateLimit from './fetchWithRateLimit';
 import SuccessModal from './SuccessModal';
 import ErrorModal from "./ErrorModal";
+import API_URL from './config';
 
 import logoTransparent from "./public/logoTransparent.png";
 import logoHuman from "./public/logoHuman.webp";
@@ -123,7 +124,7 @@ export default function Home(){
     async function handleSubmitFeedback(e){
         e.preventDefault(); console.log(feedbackEmail.current.value, feedbackDate.current.value , feedbackService.current.value , feedbackComment.current.value)
         if(feedbackName.current.value && feedbackEmail.current.value && feedbackDate.current.value && feedbackService.current.value && feedbackComment.current.value){
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/feedback", {
+            const response = await fetchWithRateLimit(`${API_URL}/feedback`, {
                 method: "POST",
                 credentials: "include",
                 headers: {

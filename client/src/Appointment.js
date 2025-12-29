@@ -9,11 +9,10 @@ import toast, { Toaster } from 'react-hot-toast';
 import checkAuthenticated from './checkAuthenticated';
 import fetchWithRateLimit from './fetchWithRateLimit';
 import AddPhoneNumberModal from './AddPhoneNumberModal';
-import RescheduleAppointmentModal from './RescheduleAppointmentModal';
-import CancelAppointmentModal from './CancelAppointmentModal';
 import SuccessModal from './SuccessModal';
 import ErrorModal from './ErrorModal';
 import Header from './Header';
+import API_URL from './config';
 
 import appointmentPage1 from "./public/appointmentPage1.jpg";
 import calendar from "./public/calendar.png";
@@ -39,9 +38,7 @@ export default function Appointment(){
     const [errorModalOpen, setErrorModalOpen] = useState(false);
 
     const [view, setView] = useState(1);
-    const [rescheduleAppointmentModalOpen, setRescheduleAppointmentModalOpen] = useState(false);
-    const [cancelAppointmentModalOpen, setCancelAppointmentModalOpen] = useState(false);
-    const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [myVouchers, setMyVouchers] = useState(null);
 
     const [isOpenHamburgerMenu, setOpenHamburgerMenu] = useState(false);
 
@@ -57,7 +54,7 @@ export default function Appointment(){
 
     
     useEffect(()=>{
-        const socket = io("https://barber-appointment-system-g7f5.onrender.com", {
+        const socket = io(API_URL, {
             withCredentials: true
         });
         
@@ -250,7 +247,7 @@ export default function Appointment(){
 
     useEffect(()=>{
         async function fetchPhoneNumberStatus(){
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/havePhoneNumber", {
+            const response = await fetchWithRateLimit(`${API_URL}/havePhoneNumber`, {
                 method: "GET",
                 credentials: "include"
             });
@@ -269,7 +266,7 @@ export default function Appointment(){
 
     useEffect(()=>{
         async function fetchAppointmentData(){
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/AppointmentStats", {
+            const response = await fetchWithRateLimit(`${API_URL}/AppointmentStats`, {
                 method: "GET",
                 credentials: "include"
             });
@@ -289,7 +286,7 @@ export default function Appointment(){
 
     useEffect(()=>{
         async function retrieveAppointments(){
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/appointment", {
+            const response = await fetchWithRateLimit(`${API_URL}/appointment`, {
                 method: "GET",
                 credentials: "include"
             });
@@ -309,7 +306,7 @@ export default function Appointment(){
         };
 
         async function retrieveLiveQueue(){
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/liveQueue", {
+            const response = await fetchWithRateLimit(`${API_URL}/liveQueue`, {
                 method: "GET",
                 credentials: "include"
             });
@@ -570,7 +567,7 @@ export default function Appointment(){
                                                     </div>
                                                     <div className='flex items-center gap-2'>
                                                         <FontAwesomeIcon icon={faMoneyBill1} className="text-yellow-600" />
-                                                        <p className="capitalize">RM{appointment.serviceId.price}</p>
+                                                        <p className="capitalize">RM{appointment.finalPrice}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -583,13 +580,6 @@ export default function Appointment(){
                         </div>
                     </div>
 
-                    {rescheduleAppointmentModalOpen && selectedAppointment !== null &&
-                        <RescheduleAppointmentModal rescheduleAppointmentModalOpen={rescheduleAppointmentModalOpen} setRescheduleAppointmentModalOpen={setRescheduleAppointmentModalOpen} selectedAppointment={selectedAppointment} setSuccessModalOpen={()=>{setSuccessModalOpen(true); setSuccessModalType("rescheduleAppointment")}} />
-                    }
-
-                    {cancelAppointmentModalOpen && selectedAppointment !== null &&
-                        <CancelAppointmentModal CancelAppointmentModalOpen={cancelAppointmentModalOpen} setCancelAppointmentModalOpen={setCancelAppointmentModalOpen} selectedAppointment={selectedAppointment} setSuccessModalOpen={()=>{setSuccessModalOpen(true); setSuccessModalType("cancelAppointment")}} />
-                    }
                     <AddPhoneNumberModal phoneNumberModalOpen={phoneNumberModalOpen} setPhoneNumberModalOpen={setPhoneNumberModalOpen} setHavePhoneNumber={setHavePhoneNumber} setSuccessModalOpen={()=>{setSuccessModalOpen(true); setSuccessModalType("addPhoneNumber")}} />
                     
                     {userRef.current &&

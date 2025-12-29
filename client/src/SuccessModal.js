@@ -47,6 +47,7 @@ export default function SuccessModal({ type, successModalOpen, setSuccessModalOp
                                         {type === "changeEmailSuccess" && "Email Changed Successfully"}
                                         {type === "unavailableTimeslot" && "Timeslot Removed Successfully"}
                                         {type === "unavailableTimeslotRemove" && "Unavailable Timeslot Removed Successfully"}
+                                        {type === "redeemVoucher" && "Voucher Redeem Successfully"}
                                     </DialogTitle>
                                     
                                     <div className="mt-2">
@@ -72,6 +73,7 @@ export default function SuccessModal({ type, successModalOpen, setSuccessModalOp
                                             {type === "changeEmailSuccess" && "Your Email is changed successfully! Please login again."}
                                             {type === "unavailableTimeslot" && "Your timeslot has been removed. Customer can no longer book appointment within that time frame."}
                                             {type === "unavailableTimeslotRemove" && "Your unavailable timeslot has been removed. Customer can now book appointment within that time frame."}
+                                            {type === "redeemVoucher" && "The voucher has been redeem successfully. You may now use it in the checkout page while making appointment."}
                                         </p>
                                     </div>
                                 </div>

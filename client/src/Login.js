@@ -6,6 +6,7 @@ import eyeOpen from "./public/eyeOpen.png";
 import eyeClose from "./public/eyeClose.png"
 import ErrorModal from "./ErrorModal";
 import SuccessModal from "./SuccessModal";
+import API_URL from './config';
 
 export default function Login(){
     const [passwordView, setPasswordView] = useState(true);
@@ -34,7 +35,7 @@ export default function Login(){
 
     async function handleSubmit(e){
         e.preventDefault();
-        const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/auth/login", {
+        const response = await fetchWithRateLimit(`${API_URL}/auth/login`, {
             method: "POST",
             credentials: "include",
             headers: {
@@ -94,8 +95,8 @@ export default function Login(){
                     <br></br> 
 
                     <div className="flex gap-5 justify-center my-2">
-                        <a className="bg-white rounded-full p-2" href="https://barber-appointment-system-g7f5.onrender.com/auth/google"><img className="w-8" src="https://img.icons8.com/?size=100&id=17949&format=png&color=000000" alt="Google Logo" /></a>
-                        <a className="bg-white rounded-full p-2" href="https://barber-appointment-system-g7f5.onrender.com/auth/facebook"><img className="w-8" src="https://img.icons8.com/?size=100&id=118497&format=png&color=000000" alt="Facebook Logo" /></a>
+                        <a className="bg-white rounded-full p-2" href={`${API_URL}/auth/google`}><img className="w-8" src="https://img.icons8.com/?size=100&id=17949&format=png&color=000000" alt="Google Logo" /></a>
+                        <a className="bg-white rounded-full p-2" href={`${API_URL}/auth/facebook`}><img className="w-8" src="https://img.icons8.com/?size=100&id=118497&format=png&color=000000" alt="Facebook Logo" /></a>
                     </div>
 
                     <div className="mt-4">

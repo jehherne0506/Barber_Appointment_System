@@ -16,6 +16,15 @@ const appointmentSchema = new mongoose.Schema({
         ref: "User",
         required: true
     },
+    voucherId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Voucher",
+    },
+    finalPrice: {
+        type: Number,
+        required: true,
+        min: 0
+    },
     date: {
         type: Date,
         required: true

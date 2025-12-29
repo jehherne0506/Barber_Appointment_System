@@ -5,6 +5,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import checkAuthenticated from './checkAuthenticated';
 import fetchWithRateLimit from './fetchWithRateLimit';
 import { MdEmail } from 'react-icons/md';
+import API_URL from './config';
 
 export default function ChangeEmailModal({ changeEmailModalOpen, setChangeEmailModalOpen, setProfileData, setSuccessModalOpen }){
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -27,7 +28,7 @@ export default function ChangeEmailModal({ changeEmailModalOpen, setChangeEmailM
     
         async function handleChangeEmail(e){
             e.preventDefault();
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/changeEmail", {
+            const response = await fetchWithRateLimit(`${API_URL}/changeEmail`, {
                 method: "POST",
                 credentials: "include",
                 headers: {

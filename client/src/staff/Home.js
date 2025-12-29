@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock } from '@fortawesome/free-solid-svg-icons';
 import { CiCircleRemove } from "react-icons/ci";
 
+import API_URL from '../config';
 import checkAuthenticated from "../checkAuthenticated";
 import fetchWithRateLimit from "../fetchWithRateLimit";
 import ConfirmPaymentModal from "./ConfirmPaymentModal";
@@ -65,7 +66,7 @@ export default function StaffHome(){
     }, [navigate]);
 
     useEffect(()=>{
-        const newSocket = io("https://barber-appointment-system-g7f5.onrender.com", {
+        const newSocket = io(API_URL, {
             withCredentials: true
         });
 
@@ -75,15 +76,17 @@ export default function StaffHome(){
 
         newSocket.on("newAppointment", function(appointmentData){
             console.log(appointmentData);
-            setPendingAppointments((pendingAppointments)=>{
-                let allPendingAppointments = [
-                    ...pendingAppointments,
-                    appointmentData
-                ];
-                allPendingAppointments.sort((a,b)=> a.queueMin - b.queueMin);
-                toast.success('An appointment has arrived!');
-                return allPendingAppointments;
-            });
+            if(appointmentData.staffId === userRef.current.id && appointmentData.date.toDateString() === new Date().toDateString()){
+                setPendingAppointments((pendingAppointments)=>{
+                    let allPendingAppointments = [
+                        ...pendingAppointments,
+                        appointmentData
+                    ];
+                    allPendingAppointments.sort((a,b)=> a.queueMin - b.queueMin);
+                    toast.success('An appointment has arrived!');
+                    return allPendingAppointments;
+                });
+            }
         });
 
         return ()=>{newSocket.disconnect()};
@@ -91,7 +94,7 @@ export default function StaffHome(){
 
     useEffect(()=>{
         async function fetchStaffData(){
-            const response = await fetch("https://barber-appointment-system-g7f5.onrender.com/staff", {
+            const response = await fetchWithRateLimit(`${API_URL}/staff`, {
                 method: "GET",
                 credentials: "include"
             });
@@ -107,7 +110,7 @@ export default function StaffHome(){
         }
         
         fetchStaffData();
-    }, [])
+    }, [navigate])
 
     useEffect(()=>{
         if(pendingAppointments){
@@ -123,11 +126,11 @@ export default function StaffHome(){
                 };
             })
         };
-    }, [timeMin, pendingAppointments]);
+    }, [timeMin, pendingAppointments, notifiedIds]);
 
     useEffect(()=>{
         async function fetchAppointmentsToday(){
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/staff/appointments", {
+            const response = await fetchWithRateLimit(`${API_URL}/staff/appointments`, {
                 method: "GET",
                 credentials: "include",
             });
@@ -151,7 +154,7 @@ export default function StaffHome(){
         if(isAuthenticated){
             fetchAppointmentsToday();
         };
-    }, [isAuthenticated]);
+    }, [isAuthenticated, navigate]);
 
     useEffect(()=>{
         const intervalId = setInterval(()=>{
@@ -168,7 +171,7 @@ export default function StaffHome(){
 
     async function handleAppointmentToInProgress(appointment){
         try{
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/staff/appointments/updateStatus", {
+            const response = await fetchWithRateLimit(`${API_URL}/staff/appointments/updateStatus`, {
                 method: "PUT",
                 credentials: "include",
                 headers: {
@@ -206,7 +209,7 @@ export default function StaffHome(){
 
     async function handleAppointmentToCompleted(appointment){
         try{
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/staff/appointments/updateStatus", {
+            const response = await fetchWithRateLimit(`${API_URL}/staff/appointments/updateStatus`, {
                 method: "PUT",
                 credentials: "include",
                 headers: {
@@ -244,7 +247,7 @@ export default function StaffHome(){
 
     async function handleRemoveUnavailableTimeslot(e){
         e.preventDefault();
-        const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/staff/removeUnavailableTimeslot", {
+        const response = await fetchWithRateLimit(`${API_URL}/staff/removeUnavailableTimeslot`, {
             method: "POST",
             credentials: "include",
             headers: {

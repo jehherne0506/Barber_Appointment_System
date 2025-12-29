@@ -16,6 +16,7 @@ import AppointmentStep3 from './appointmentProcess/AppointmentStep3';
 import AppointmentStep4 from './appointmentProcess/AppointmentStep4';
 
 import ErrorModal from './ErrorModal';
+import API_URL from './config';
 
 export default function MakeAppointment(){
     const navigate = useNavigate();
@@ -57,7 +58,7 @@ export default function MakeAppointment(){
     }, [navigate]);
 
     useEffect(()=>{
-        const newSocket = io("https://barber-appointment-system-g7f5.onrender.com", {
+        const newSocket = io(API_URL, {
             withCredentials: true
         });
 
@@ -70,7 +71,7 @@ export default function MakeAppointment(){
 
     useEffect(()=>{
         async function fetchServices(){
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/appointment/services", {
+            const response = await fetchWithRateLimit(`${API_URL}/appointment/services`, {
                 method: "GET",
                 credentials: "include"
             });
@@ -93,7 +94,7 @@ export default function MakeAppointment(){
 
     useEffect(()=>{
         async function fetchStaffTimeslot(){
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/appointment/timeslot", {
+            const response = await fetchWithRateLimit(`${API_URL}/appointment/timeslot`, {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -135,17 +136,17 @@ export default function MakeAppointment(){
 
     console.log(service, staff, total)
 
-    function handleSubmit(e){ 
+    function handleSubmit(e, voucherId=null){ 
         e.preventDefault();
         const paymentMethod = e.nativeEvent.submitter.value;
         async function submitAppointment(){
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/appointment/makeAppointment", {
+            const response = await fetchWithRateLimit(`${API_URL}/appointment/makeAppointment`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 credentials: "include",
-                body: JSON.stringify({staffId: staffIdSelected, date: dateSelected, serviceId: serviceIdSelected, timeslot: timeslotSelected, paymentMethod: paymentMethod})
+                body: JSON.stringify({staffId: staffIdSelected, date: dateSelected, serviceId: serviceIdSelected, timeslot: timeslotSelected, paymentMethod: paymentMethod, voucherId})
             });
 
             const result = await response.json(); console.log(result)
@@ -218,7 +219,7 @@ export default function MakeAppointment(){
 
                         {
                             service && staff && total && dateSelected && timeslotSelected && modalPage === 4 &&
-                            <AppointmentStep4 modalPage={modalPage} setModalPage={setModalPage} handleSubmit={handleSubmit} service={service} staff={staff} total={total} staffIdSelected={staffIdSelected} dateSelected={dateSelected} timeslotSelected={timeslotSelected} />
+                            <AppointmentStep4 modalPage={modalPage} setModalPage={setModalPage} handleSubmit={handleSubmit} serviceName={service} serviceIdSelected={serviceIdSelected} staff={staff} total={total} staffIdSelected={staffIdSelected} dateSelected={dateSelected} timeslotSelected={timeslotSelected} />
                         }
                     </div>
                 </>

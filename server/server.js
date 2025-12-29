@@ -18,6 +18,7 @@ const Service = require("./models/service");
 const Appointment = require("./models/appointment");
 const UnavailableTimeslot = require("./models/unavailableTimeslot");
 const Feedback = require("./models/feedback");
+const Voucher = require("./models/voucher");
 
 const connectMongoose = require('./connectMongoose');
 const generateCookie = require('./generateCookie');
@@ -45,9 +46,13 @@ const app = express();
 app.set("trust proxy", 1);
 app.set("view engine", "ejs");
 const server = http.createServer(app);
+const allowedOrigins = [
+  "http://localhost:3000",                            
+  "https://barber-appointment-system-1.onrender.com",             
+];
 const io = new Server(server, {
   cors: {
-    origin: "https://barber-appointment-system-1.onrender.com/",
+    origin: allowedOrigins,
     credentials: true
   }
 });
@@ -108,10 +113,16 @@ app.post('/webhook', express.raw({type: 'application/json'}), async(request, res
         const appointmentId = eventData.metadata.appointmentId;
         const appointment = await Appointment.findOne({
           _id: appointmentId
-        }).populate("customerId", "username email").populate("serviceId", "name price").populate("staffId", "username email");
+        }).populate("customerId", "_id username email").populate("serviceId", "name price points").populate("staffId", "username email");
         const email = appointment.customerId.email;
         appointment.paymentStatus = "PAID";
         await appointment.save();
+
+        const userFound = await User.findById(appointment.customerId._id);
+        if(userFound){
+          userFound.points = userFound.points + appointment.serviceId.price;
+          await userFound.save();
+        } 
 
         io.emit("newAppointment", appointment);
         sendMakeAppointmentDetails(appointment, email);
@@ -431,7 +442,7 @@ app.post('/feedback', verifyUser, async(req,res)=>{
   const {name, email, date, service, comment} = req.body;
   try{
     const customer = await User.findOne({email: email});
-    const serviceId = await Service.findOne({name: service});
+    const serviceId = await Service.findOne({name: service});console.log(serviceId);console.log(service)
     if(serviceId){
       let newFeedback;
       if(customer){
@@ -444,7 +455,7 @@ app.post('/feedback', verifyUser, async(req,res)=>{
       } else{
         newFeedback = await Feedback({
           date: date,
-          service: serviceId,
+          serviceId: serviceId,
           comment: comment
         }); 
       };
@@ -456,7 +467,7 @@ app.post('/feedback', verifyUser, async(req,res)=>{
         name: name,
         email: email,
         date: date,
-        serviceId: serviceId,
+        service: service,
         comment: comment
       }
       await sendFeedback(feedbackDetails, email);
@@ -659,9 +670,7 @@ app.post("/appointment/timeslot", verifyUser, async(req,res)=>{
 });
 
 app.post("/appointment/makeAppointment", verifyUser, async(req,res)=>{
-  let { staffId, date, serviceId, timeslot, paymentMethod } = req.body;
-  const dateString = new Date(date).toISOString().split("T")[0]; 
-  const dateObj = new Date(new Date(dateString).toISOString().split("T")[0] + 'T00:00:00.000Z');
+  let { staffId, date, serviceId, timeslot, paymentMethod, voucherId } = req.body; console.log(req.body)
   const customerId = req.user?.id;
   const customerEmail = req.user?.email;
 
@@ -670,6 +679,8 @@ app.post("/appointment/makeAppointment", verifyUser, async(req,res)=>{
   }
 
   try{
+    const dateString = new Date(date).toISOString().split("T")[0]; 
+    const dateObj = new Date(new Date(dateString).toISOString().split("T")[0] + 'T00:00:00.000Z');
     const startedAt = timeslot.time.split("-")[0].trim();
     const endedAt = timeslot.time.split("-")[1].trim();console.log(dateObj);console.log(startedAt)
 
@@ -677,15 +688,25 @@ app.post("/appointment/makeAppointment", verifyUser, async(req,res)=>{
     const endedAtDate = new Date(`${dateString}T${endedAt}:00.000Z`);
     const queueMin = timeslot.queueMin;
 
-    if(customerId && serviceId && staffId && dateObj && startedAt && endedAt){
-      if(staffId === "any"){
-        const serviceFound = await Service.findOne({
-          _id: serviceId
-        }); 
+    let voucherFound = null;
+    if(voucherId){console.log(voucherId)
+      voucherFound = await Voucher.findById(voucherId);
 
+      const userFound = await User.findById(customerId);
+      if(userFound){
+        const voucherToUpdate = userFound.vouchers.find(voucher => voucher.voucherId.toString() === voucherId);
+        voucherToUpdate.isUsed = true;
+        await userFound.save()
+      }
+    }
+
+    if(customerId && serviceId && staffId && dateObj && startedAt && endedAt){
+      const serviceFound = await Service.findOne({
+        _id: serviceId
+      }); 
+      if(staffId === "any"){
         const allStaffIds = serviceFound.staff;
 
-        let selectedStaffId = null;
         for(let staffIdFound of allStaffIds){
           const appointmentFound = await Appointment.findOne({
             date: dateObj,
@@ -697,7 +718,18 @@ app.post("/appointment/makeAppointment", verifyUser, async(req,res)=>{
               }
             ]
           });
-          if(!appointmentFound){
+
+          const unavailableTimeslotFound = await UnavailableTimeslot.findOne({
+            date: dateObj,
+            staffId: staffIdFound,
+            $or: [
+              {
+                startedAtDate: {$lt: endedAtDate},
+                endedAtDate: {$gt: startedAtDate},
+              }
+            ]
+          })
+          if(!appointmentFound && !unavailableTimeslotFound){
             staffId = staffIdFound;
             break;
           }
@@ -727,16 +759,17 @@ app.post("/appointment/makeAppointment", verifyUser, async(req,res)=>{
         startedAt,
         endedAt,
         queueMin,
-        paymentStatus: "UNPAID"
+        paymentStatus: "UNPAID",
+        voucherId: voucherId,
+        finalPrice: voucherId !== null ? processVoucherPrice(voucherFound, serviceFound.price) : serviceFound.price
       });
       await newAppointment.save();
 
       if(paymentMethod === "stripe"){
-        const appointmentId = newAppointment._id;
         const service = await Service.findOne({
           _id: serviceId
         });
-        const sessionURL = await stripePayment(service, appointmentId, customerEmail);
+        const sessionURL = await stripePayment(service, newAppointment);
         return res.json({status: "success", message: sessionURL});
       } else{
         const appointmentSend = await Appointment.findOne({_id: newAppointment._id}).populate("customerId", "username email").populate("serviceId", "name price").populate("staffId", "_id username");
@@ -745,7 +778,6 @@ app.post("/appointment/makeAppointment", verifyUser, async(req,res)=>{
         io.emit("newAppointment", appointmentSend);
         return res.json({status: "success"});
       }
-      
     } return res.json({status: "fail", message: "error"});
   } catch(err){
     console.log(err);
@@ -927,8 +959,111 @@ app.get("/profile", verifyUser, async(req, res)=>{
       appointmentPreferenceStaff = appointmentPreferences.split("-")[1];
     }console.log(allAppointmentPreferences);
     
-    const userObj = {_id: userFound._id, username: userFound.username, avatar: userFound.avatar, email: userFound.email, date: userFound.createdAt, phoneNumber: userFound.phoneNumber || null, numberOfAppointments: userFound.appointments.length || 0, totalSpent: totalSpent, styleProfile: userFound.styleProfile, lastAppointmentDate: lastAppointmentDate, appointmentPreferenceService: appointmentPreferenceService, appointmentPreferenceStaff: appointmentPreferenceStaff, emailVerified: userFound.emailVerified, googleVerified: !!(userFound.googleId), facebookVerified: !!(userFound.facebookId)}
+    const userObj = {_id: userFound._id, username: userFound.username, avatar: userFound.avatar, email: userFound.email, date: userFound.createdAt, phoneNumber: userFound.phoneNumber || null, numberOfAppointments: userFound.appointments.length || 0, totalSpent: totalSpent, styleProfile: userFound.styleProfile, lastAppointmentDate: lastAppointmentDate, appointmentPreferenceService: appointmentPreferenceService, appointmentPreferenceStaff: appointmentPreferenceStaff, emailVerified: userFound.emailVerified, googleVerified: !!(userFound.googleId), facebookVerified: !!(userFound.facebookId), points: userFound.points};
     return res.json({status: "success", message: userObj});
+  } catch(err){
+    console.log(err);
+    return res.json({status: "fail", message: "error"});
+  }
+})
+
+app.get("/storeVoucher", verifyUser, async(req,res)=>{
+  const userId = req.user.id;
+
+  if(!userId){
+    return res.json({status: "fail", message: "auth"});
+  }
+  try{
+    const todayDate = new Date();
+    todayDate.setHours(0,0,0,0);
+    const allVouchers = await Voucher.find({
+      $or: [
+        {expiredAt: {$exists: false}},
+        {expiredAt: null},
+        {expiredAt: {$gte: todayDate}}
+      ]
+    });
+    if(allVouchers){
+      const userFound = await User.findById(userId);
+      if(!userFound){
+        return res.json({status: "fail", message: "auth"});
+      };
+
+      for(let voucher of allVouchers){console.log(voucher)
+        if(voucher.limitCount !== undefined){
+            const existCount = userFound.vouchers.filter(userVoucher => userVoucher.voucherId.toString() === voucher._id.toString()).length;console.log(existCount)
+            voucher.limitCount -= existCount;console.log(voucher.limitCount)
+        }
+      }
+      return res.json({status: "success", message: allVouchers});
+    } return res.json({status: "fail", message: "error"});
+  } catch(err){
+    console.log(err);
+    return res.json({status: "fail", message: "error"});
+  }
+})
+
+app.get("/userVoucher", verifyUser, async(req,res)=>{
+  const userId = req.user.id;
+
+  if(!userId){
+    return res.json({status: "fail", message: "auth"});
+  }
+
+  try{
+      const userFound = await User.findById(userId).populate("vouchers.voucherId");
+      if(!userFound){
+        return res.json({status: "fail", message: "auth"});
+      };
+
+      const availableVouchers = userFound.vouchers.filter(voucher => !voucher.isUsed);
+      const usedVouchers = userFound.vouchers.filter(voucher => voucher.isUsed);
+
+      return res.json({status: "success", message: {availableVouchers, usedVouchers}})
+  } catch(err){
+    console.log(err);
+    return res.json({status: "fail", message: "error"});
+  }
+})
+
+app.post("/userVoucher/service", verifyUser, async(req,res)=>{
+  const userId = req.user.id;
+
+  if(!userId){
+    return res.json({status: "fail", message: "auth"});
+  }
+
+  try{
+      const {serviceId} = req.body;
+      const userFound = await User.findById(userId).populate("vouchers.voucherId");
+      if(!userFound){
+        return res.json({status: "fail", message: "auth"});
+      };
+
+      const availableVouchers = userFound.vouchers.filter(voucher => {
+        if(voucher.isUsed){
+          return false;
+        } 
+        if(!voucher.voucherId.applicableService){
+          return true;
+        } console.log(voucher.voucherId.applicableService.toString())
+        return voucher.voucherId.applicableService.toString() === serviceId.toString();
+      });
+
+      return res.json({status: "success", message: {availableVouchers}})
+  } catch(err){
+    console.log(err);
+    return res.json({status: "fail", message: "error"});
+  }
+})
+
+app.post("/voucherSelected", verifyUser, async(req,res)=>{
+  const {appointmentId} = req.body;
+  try{
+    const appointmentFound = await Appointment.findById(appointmentId).populate("voucherId");console.log(appointmentFound)
+    if(appointmentFound){
+      return res.json({status: "success", message: appointmentFound});
+    } return res.json({status: "fail", message: "error"});
   } catch(err){
     console.log(err);
     return res.json({status: "fail", message: "error"});
@@ -954,6 +1089,33 @@ app.post("/styleProfile", verifyUser, async(req,res)=>{
       }
       await userFound.save();
       return res.json({status: "success"});
+    } return res.json({status: "fail", message: "error"});
+  } catch(err){
+    console.log(err);
+    return res.json({status: "fail", message: "error"});
+  }
+})
+
+app.post("/redeemVoucher", verifyUser, async(req,res)=>{
+  const userId = req.user.id;
+  const {voucherId} = req.body;console.log(req.body)
+
+  if(!userId){
+    return res.json({status: "fail", message: "auth"});
+  }
+
+  try{
+    let userFound = await User.findById(userId);
+    let voucherFound = await Voucher.findById(voucherId);
+    if(userFound && voucherFound){
+      if(userFound.points >= voucherFound.pointsRequired){
+        userFound.vouchers.push({voucherId: voucherId});
+        userFound.points -= voucherFound.pointsRequired;
+        await userFound.save();
+        return res.json({status: "success"});
+      } else{
+        return res.json({status: "fail", message: "error"});
+      }
     } return res.json({status: "fail", message: "error"});
   } catch(err){
     console.log(err);
@@ -1115,10 +1277,13 @@ app.put("/staff/appointments/updateStatus", verifyStaff, async(req,res)=>{consol
       appointmentUpdateStatus = await Appointment.findByIdAndUpdate(id, {status: status});
     }
     if(appointmentUpdateStatus){
-      const appointmentFound = await Appointment.findById(id).populate("customerId", "username email").populate("serviceId", "name price").populate("staffId", "username email");
+      const appointmentFound = await Appointment.findById(id).populate("customerId", "username email").populate("serviceId", "name price points").populate("staffId", "username email");
       if(status === "IN PROGRESS"){
         sendAppointmentInProgress(appointmentFound, email);
       } else if(status === "COMPLETED"){console.log("send email")
+        const userFound = await User.findOne({email: email});
+        userFound.points = userFound.points + appointmentFound.serviceId.price;
+        await userFound.save();
         sendAppointmentCompleted(appointmentFound, email);
       }
       return res.json({status: "success", message: appointmentFound});
@@ -1166,12 +1331,18 @@ app.post("/staff/unavailableTimeslot", verifyStaff, async(req, res)=>{
     try{
       const {dateSelected, startedAt, endedAt, reason} = req.body;
       const dateObj = new Date(dateSelected + 'T00:00:00.000Z');
+      const dateString = new Date(dateSelected).toISOString().split("T")[0]; 
+
+      const startedAtDate = new Date(`${dateString}T${startedAt}:00.000Z`);
+      const endedAtDate = new Date(`${dateString}T${endedAt}:00.000Z`);
         const unavailableTimeslot = await UnavailableTimeslot({
           staffId: staffId,
           date: dateObj,
           startedAt: startedAt,
           endedAt: endedAt,
-          reason: reason
+          reason: reason,
+          startedAtDate,
+          endedAtDate
         }); 
 
       await unavailableTimeslot.save();
@@ -1201,13 +1372,8 @@ app.post("/staff/removeUnavailableTimeslot", verifyStaff, async(req,res)=>{
     }
 })
 
-server.listen(5000, async ()=>{
-    await connectMongoose();
-    console.log("Server running on port 5000");
-})
-
 function calculateStats(appointments){
-  const totalSpent = appointments ? appointments.reduce((acc, currentAppointment) => acc += (currentAppointment.paymentStatus === "PAID" ? currentAppointment.serviceId.price : 0), 0) : 0;
+  const totalSpent = appointments ? appointments.reduce((acc, currentAppointment) => acc += (currentAppointment.paymentStatus === "PAID" ? currentAppointment.finalPrice : 0), 0) : 0;
 
   let lastAppointmentDate = "-";
   if(appointments.length > 0){
@@ -1220,3 +1386,16 @@ function calculateStats(appointments){
   }
   return {totalSpent, lastAppointmentDate}
 }
+
+function processVoucherPrice(voucherFound, originalPrice){
+    const discountType = voucherFound.discountType;
+    const discountValue = voucherFound.discountValue;
+    if(discountType === "PERCENTAGE"){
+        return Number(originalPrice) * (100 - Number(discountValue)) / 100;
+    } return Number(originalPrice) - Number(discountValue);
+}
+
+server.listen(5000, async ()=>{
+    await connectMongoose();
+    console.log("Server running on port 5000");
+})

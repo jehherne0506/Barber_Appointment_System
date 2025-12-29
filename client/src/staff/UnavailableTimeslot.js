@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import checkAuthenticated from '../checkAuthenticated';
 import fetchWithRateLimit from '../fetchWithRateLimit';
+import API_URL from '../config';
 
 export default function UnavailableTimeslot({ unavailableTimeslotOpen, setUnavailableTimeslotOpen, setErrorModalOpen, setSuccessModalOpen, setSuccessModalType, setStaffData }){
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -33,7 +34,7 @@ export default function UnavailableTimeslot({ unavailableTimeslotOpen, setUnavai
 
     useEffect(()=>{
         async function fetchTimeslot(){
-            const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/staff/timeslot", {
+            const response = await fetchWithRateLimit(`${API_URL}/staff/timeslot`, {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -62,7 +63,7 @@ export default function UnavailableTimeslot({ unavailableTimeslotOpen, setUnavai
 
     async function handleAddUnavailableTimeslot(e){
         e.preventDefault();
-        const response = await fetchWithRateLimit("https://barber-appointment-system-g7f5.onrender.com/staff/unavailableTimeslot", {
+        const response = await fetchWithRateLimit(`${API_URL}/staff/unavailableTimeslot`, {
             method: "POST",
             credentials: "include",
             headers: {

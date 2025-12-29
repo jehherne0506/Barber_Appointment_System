@@ -143,13 +143,13 @@ function generateAppointmentTemplate(appointment) {
         startedAt,
         endedAt,
         paymentStatus,
-        status
+        status,
+        finalPrice
     } = appointment;
 
     const customerName = appointment.customerId.username;
     const serviceName = appointment.serviceId.name;
     const staffName = appointment.staffId.username; // <- FIXED
-    const price = appointment.serviceId.price;       // <- YOUR NEW FIELD
 
     const formattedDate = new Date(date).toLocaleDateString("en-MY", {
         weekday: "long",
@@ -177,7 +177,7 @@ function generateAppointmentTemplate(appointment) {
 
           <tr>
             <td style="padding: 8px 0; color: #777;">Price:</td>
-            <td style="padding: 8px 0; font-weight: bold;">RM ${price.toFixed(2)}</td>
+            <td style="padding: 8px 0; font-weight: bold;">RM ${finalPrice.toFixed(2)}</td>
           </tr>
 
           <tr>
@@ -527,7 +527,7 @@ function generateUserFeedbackTemplate(feedback) {
           </tr>
           <tr>
             <td style="color:#777;">Your Comment:</td>
-            <td><strong>${comment }</strong></td>
+            <td><strong>${comment}</strong></td>
           </tr>
         </table>
 
@@ -552,7 +552,6 @@ function generateAdminFeedbackNotificationTemplate(feedback) {
 
     const formattedDate = new Date(date).toLocaleDateString("en-MY", {
         weekday: "short", year: "numeric", month: "short", day: "numeric",
-        hour: "2-digit", minute: "2-digit"
     });
 
     return `

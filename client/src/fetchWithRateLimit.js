@@ -1,5 +1,7 @@
+import API_URL from './config';
+
 async function attemptRefresh(){
-    const response = await fetch("https://barber-appointment-system-g7f5.onrender.com/auth/refresh", {
+    const response = await fetch(`${API_URL}/auth/refresh`, {
         method: "POST",
         credentials: "include"
     });
