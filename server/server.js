@@ -1011,8 +1011,10 @@ app.get("/userVoucher", verifyUser, async(req,res)=>{
         return res.json({status: "fail", message: "auth"});
       };
 
-      const availableVouchers = userFound.vouchers.filter(voucher => !voucher.isUsed);console.log(availableVouchers)
-      const usedVouchers = userFound.vouchers.filter(voucher => voucher.isUsed);
+      const availableVouchers = userFound.vouchers.filter(voucher => !voucher.isUsed);
+
+      const appointmentFound = await Appointment.find({customerId: userId}).populate("voucherId");
+      const usedVouchers = appointmentFound.filter(appointment => appointment.voucherId);
 
       return res.json({status: "success", message: {availableVouchers, usedVouchers}})
   } catch(err){
