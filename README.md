@@ -1,5 +1,3 @@
-<img width="1895" height="960" alt="Home Page" src="https://github.com/user-attachments/assets/307b4491-e963-4652-b24d-4bdc9419da2f" /><h1 align="center" id="title">The Fade Hub</h1>
-
 <p align="center"><img src="https://socialify.git.ci/jehherne0506/barber_appointment_system/image?description=1&amp;font=KoHo&amp;language=1&amp;name=1&amp;owner=1&amp;pattern=Circuit+Board&amp;theme=Dark" alt="project-image"></p>
 
 <p id="description">Barber Appointment System — a full-stack web application built with the MERN stack that enables users to browse services book appointments manage schedules and handle authentication.</p>
