@@ -75,47 +75,21 @@ export default function StaffHome(){
         newSocket.emit("join", "staff");
 
         newSocket.on("newAppointment", function(appointmentData){
-            // 1. SAFETY CHECK: User must be logged in
-            if (!userRef.current) return;
-
-            // 2. CRASH-PROOF ID EXTRACTION
-            // We use (?.) to safely get _id if it's an object.
-            // We use (||) to fallback to the string itself if it's not an object.
-            // We use ("") to ensure we never crash on nulls.
-            const staffRef = appointmentData.staffId;
-            const incomingId = String(staffRef?._id || staffRef?.id || staffRef || "").trim();
-
-            // Do the same for the current user
-            const currentUser = userRef.current;
-            const currentUserId = String(currentUser?._id || currentUser?.id || "").trim();
-
-            // 3. SAFE LOGGING (Log the CLEAN variables, not the risky objects)
-            console.log("Incoming ID:", incomingId);
-            console.log("Current User ID:", currentUserId);
-
-            // 4. THE LOGIC
-            // Only run if we have valid IDs and they match
-            if (incomingId && currentUserId && incomingId === currentUserId) {
-                
-                // Safe Date Comparison
-                const appointmentDate = new Date(appointmentData.date).toDateString();
-                const todayDate = new Date().toDateString();
-
-                if (appointmentDate === todayDate) {
-                    setPendingAppointments((pendingAppointments) => {
-                        const safePending = pendingAppointments || [];
-                        
-                        // Prevent duplicates
-                        if (safePending.some(appt => appt._id === appointmentData._id)) {
-                            return safePending;
-                        }
-
-                        let allPendingAppointments = [...safePending, appointmentData];
-                        allPendingAppointments.sort((a,b) => a.queueMin - b.queueMin);
-                        toast.success('An appointment has arrived!');
-                        return allPendingAppointments;
-                    });
-                }
+            if (!userRef.current) {
+                console.log("User not authenticated yet. Ignoring event.");
+                return; 
+            }
+            console.log(appointmentData);
+            if(String(appointmentData.staffId.id).trim() === String(userRef.current.id).trim() && new Date(appointmentData.date).toDateString() === new Date().toDateString()){
+                setPendingAppointments((pendingAppointments)=>{
+                    let allPendingAppointments = [
+                        ...pendingAppointments,
+                        appointmentData
+                    ];
+                    allPendingAppointments.sort((a,b)=> a.queueMin - b.queueMin);
+                    toast.success('An appointment has arrived!');
+                    return allPendingAppointments;
+                });
             }
         });
 
