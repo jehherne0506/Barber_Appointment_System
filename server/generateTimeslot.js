@@ -18,7 +18,7 @@ console.log(allTimeslots);
 
 function generateOriginalTimeslot(date){
 
-    const todayDate = new Date().toISOString().split("T")[0];
+    const todayDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kuala_Lumpur"})).toISOString().split("T")[0];
 
     let WORK_START = 9 * 60;
     const WORK_END = 17 * 60;
