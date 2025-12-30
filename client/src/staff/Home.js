@@ -79,13 +79,16 @@ export default function StaffHome(){
                 console.log("User not authenticated yet. Ignoring event.");
                 return; 
             }
+            const staffRef = appointmentData.staffId;
+    const incomingId = String(staffRef?._id || staffRef?.id || staffRef || "").trim();
+
+    // Check userRef safely too
+    const currentUserId = String(userRef.current?._id || userRef.current?.id || "").trim();
+
+    // 3. Debugging - Now this WON'T crash even if data is missing
+    console.log("Safe Incoming ID:", incomingId);
+    console.log("Safe Current User ID:", currentUserId);
             console.log(appointmentData);
-            console.log(appointmentData.staffId.id)
-            console.log(userRef.current.id)
-            console.log(appointmentData.staffId.id === userRef.current.id)
-            console.log(new Date(appointmentData.date).toDateString())
-            console.log(new Date().toDateString())
-            console.log(new Date(appointmentData.date).toDateString() === new Date().toDateString())
             if(String(appointmentData.staffId.id).trim() === String(userRef.current.id).trim() && new Date(appointmentData.date).toDateString() === new Date().toDateString()){
                 setPendingAppointments((pendingAppointments)=>{
                     let allPendingAppointments = [
