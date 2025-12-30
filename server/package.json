@@ -29,6 +29,7 @@
     "passport-google-oauth20": "^2.0.0",
     "prisma": "^7.0.0",
     "redis": "^5.10.0",
+    "resend": "^6.6.0",
     "socket.io": "^4.8.1",
     "stripe": "^20.0.0",
     "twilio": "^5.10.7"

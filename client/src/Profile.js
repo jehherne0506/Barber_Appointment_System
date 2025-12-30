@@ -420,7 +420,7 @@ export default function Profile(){
 
                                 <div className="flex flex-col items-center md:items-end">
                                     <p className="font-hegarty text-5xl md:text-6xl text-yellow-500 drop-shadow-sm leading-none">
-                                        {myVouchers.availableVouchers.length || 0}
+                                        {myVouchers?.availableVouchers?.length || 0}
                                     </p>
                                     <p className="text-yellow-600/80 font-robotoCondensed text-xs uppercase tracking-widest mt-1">
                                         Available to Use
@@ -429,7 +429,7 @@ export default function Profile(){
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-                                {myVouchers.availableVouchers && myVouchers.availableVouchers.map((voucher, idx) => (
+                                {myVouchers?.availableVouchers && myVouchers.availableVouchers.map((voucher, idx) => (
                                     <div key={idx} className="group relative flex flex-col justify-between p-6 bg-neutral-900/80 border border-neutral-700 rounded-xl overflow-hidden hover:border-yellow-600/50 hover:shadow-[0_0_20px_-10px_rgba(202,138,4,0.3)] transition-all duration-300">
 
                                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-600/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -492,7 +492,7 @@ export default function Profile(){
 
                                 <div className="flex flex-col items-center md:items-end">
                                     <p className="font-hegarty text-5xl md:text-6xl text-yellow-500 drop-shadow-sm leading-none">
-                                        {myVouchers.usedVouchers.length || 0}
+                                        {myVouchers?.usedVouchers.length || 0}
                                     </p>
                                     <p className="text-yellow-600/80 font-robotoCondensed text-xs uppercase tracking-widest mt-1">
                                         Redeemed
@@ -501,7 +501,7 @@ export default function Profile(){
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-                                {myVouchers.usedVouchers && myVouchers.usedVouchers.map((voucher, idx) => (
+                                {myVouchers?.usedVouchers && myVouchers.usedVouchers.map((voucher, idx) => (
                                     <div key={idx} className="group relative flex flex-col justify-between p-6 bg-neutral-900/80 border border-neutral-700 rounded-xl overflow-hidden hover:border-yellow-600/50 hover:shadow-[0_0_20px_-10px_rgba(202,138,4,0.3)] transition-all duration-300">
 
                                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-600/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

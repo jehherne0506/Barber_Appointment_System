@@ -47,7 +47,7 @@ export default function Register(){
             body: JSON.stringify({"username": usernameRef.current.value, "email": emailRef.current.value, "password": passwordRef.current.value, "phoneNumber": phoneNumber})
         });
         
-        const result = await response.json();
+        const result = await response.json();console.log(result)
         if(result.status === "success"){
             navigate("/auth/login", {state: {successModalOpen: true, successModalType: "emailVerification"}})
         } else{
