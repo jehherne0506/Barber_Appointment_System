@@ -76,7 +76,7 @@ export default function StaffHome(){
 
         newSocket.on("newAppointment", function(appointmentData){
             console.log(appointmentData);
-            if(appointmentData.staffId === userRef.current.id && new Date(appointmentData.date.toDateString()) === new Date().toDateString()){
+            if(appointmentData.staffId === userRef.current.id && new Date(appointmentData.date).toDateString() === new Date().toDateString()){
                 setPendingAppointments((pendingAppointments)=>{
                     let allPendingAppointments = [
                         ...pendingAppointments,
