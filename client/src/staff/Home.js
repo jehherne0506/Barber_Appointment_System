@@ -75,6 +75,10 @@ export default function StaffHome(){
         newSocket.emit("join", "staff");
 
         newSocket.on("newAppointment", function(appointmentData){
+            if (!userRef.current) {
+                console.log("❌ User not authenticated yet. Ignoring event.");
+                return; 
+            }
             console.log(appointmentData);
             console.log(appointmentData.staffId._id)
             console.log(userRef.current.id)
