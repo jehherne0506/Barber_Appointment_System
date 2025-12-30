@@ -76,17 +76,17 @@ export default function StaffHome(){
 
         newSocket.on("newAppointment", function(appointmentData){
             if (!userRef.current) {
-                console.log("❌ User not authenticated yet. Ignoring event.");
+                console.log("User not authenticated yet. Ignoring event.");
                 return; 
             }
             console.log(appointmentData);
-            console.log(appointmentData.staffId._id)
+            console.log(appointmentData.staffId.id)
             console.log(userRef.current.id)
-            console.log(appointmentData.staffId._id === userRef.current.id)
+            console.log(appointmentData.staffId.id === userRef.current.id)
             console.log(new Date(appointmentData.date).toDateString())
             console.log(new Date().toDateString())
             console.log(new Date(appointmentData.date).toDateString() === new Date().toDateString())
-            if(String(appointmentData.staffId._id).trim() === String(userRef.current.id).trim() && new Date(appointmentData.date).toDateString() === new Date().toDateString()){
+            if(String(appointmentData.staffId.id).trim() === String(userRef.current.id).trim() && new Date(appointmentData.date).toDateString() === new Date().toDateString()){
                 setPendingAppointments((pendingAppointments)=>{
                     let allPendingAppointments = [
                         ...pendingAppointments,
