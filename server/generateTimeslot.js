@@ -17,16 +17,16 @@ console.log(allTimeslots);
 };
 
 function generateOriginalTimeslot(date){
-
-    const todayDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kuala_Lumpur"})).toISOString().split("T")[0];
+    const timeNow = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kuala_Lumpur"}))
+    const todayDate = timeNow.toISOString().split("T")[0];
 
     let WORK_START = 9 * 60;
     const WORK_END = 17 * 60;
     const INTERVAL = 15;
 
     if(date.split("T")[0] === todayDate){console.log('same date')
-        const HOUR = todayDate.getHours();
-        const MIN = todayDate.getMinutes();
+        const HOUR = timeNow.getHours();
+        const MIN = timeNow.getMinutes();
         let time = HOUR * 60 + MIN;
         if (time >= WORK_END) {
             WORK_START = WORK_END;
