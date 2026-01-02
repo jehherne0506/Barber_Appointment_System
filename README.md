@@ -11,8 +11,12 @@
 <h2>Project Screenshots:</h2>
 
 <img width="1893" height="997" alt="image" src="https://github.com/user-attachments/assets/cdaecd7a-b80b-45d6-a12a-12ced089086c" />
-<br><br><br>
-<img width="1899" height="983" alt="image" src="https://github.com/user-attachments/assets/a72d0004-696a-4434-a4b6-4b68e9eddc7d" />
+<br><br>
+<img width="1907" height="955" alt="image" src="https://github.com/user-attachments/assets/1505079f-8701-4124-a264-72a03c393094" />
+<br><br>
+<img width="1897" height="971" alt="image" src="https://github.com/user-attachments/assets/9a19d614-a51c-44db-8b70-247f488c5f46" />
+
+
 
   
   
