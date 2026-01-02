@@ -35,7 +35,7 @@ COPY server/package*.json ./
 RUN npm install
 
 # Copy backend source code
-COPY . .
+COPY server/ .
 
 # Copy the built React app from Stage 1 into the backend's folder
 COPY --from=frontend_build /app/client/build ./client/build
