@@ -1392,6 +1392,15 @@ function processVoucherPrice(voucherFound, originalPrice){
     } return Number(originalPrice) - Number(discountValue);
 }
 
+// 1. Serve Static Assets (The React App Build)
+app.use(express.static(path.join(__dirname, "client/build")));
+
+// 2. Catch-All Route (For React Router)
+// If a user goes to /profile or /login directly, serve index.html
+app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "client/build", "index.html"));
+});
+
 server.listen(5000, async ()=>{
     await connectMongoose();
     console.log("Server running on port 5000");
