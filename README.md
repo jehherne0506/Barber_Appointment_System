@@ -10,6 +10,8 @@
 
 <h2>Project Screenshots:</h2>
 
+<img width="1919" height="977" alt="image" src="https://github.com/user-attachments/assets/3ede8572-b551-417b-bacb-8c05096b7258" />
+<br><br>
 <img width="1893" height="997" alt="image" src="https://github.com/user-attachments/assets/cdaecd7a-b80b-45d6-a12a-12ced089086c" />
 <br><br>
 <img width="1907" height="955" alt="image" src="https://github.com/user-attachments/assets/1505079f-8701-4124-a264-72a03c393094" />
