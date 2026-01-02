@@ -46,3 +46,8 @@ Technologies used in the project:
 *   Express Rate Limit
 *   Redis
 *   Stripe
+
+<h2>Project Progress</h2>
+<p>Started At 10-12-2025</p>
+<p>Ver 1.0 27-12-2025</p>
+<p>Ver 2.0 29-12-2025</p>
