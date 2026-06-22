@@ -70,22 +70,36 @@ export default function MakeAppointment(){
     }, []);
 
     useEffect(()=>{
-        async function fetchServices(){
-            const response = await fetchWithRateLimit(`${API_URL}/appointment/services`, {
-                method: "GET",
-                credentials: "include"
-            });
-            
-            const result = await response.json();console.log(result)
-            if(result.status === "success"){
-                setAllServices(result.message);
-            } else if(result.status === "fail" && result.message === "auth"){
-                navigate("/auth/login", {state: {errorModalOpen: true}});
-            } else{
-                setErrorModalOpen(true);
-                setErrorModalType("error");
-            }
-        };
+        async function fetchServices() {
+    console.log("FETCHING SERVICES");
+    console.log("API URL:", API_URL);
+
+    try {
+        // If this line fails, it instantly jumps to the 'catch' block below
+        const response = await fetchWithRateLimit(`${API_URL}/appointment/services`, {
+            method: "GET",
+            credentials: "include"
+        });
+        
+        console.log("RAW RESPONSE", response);
+        const result = await response.json();
+        console.log("RESULT", result);
+
+        if (result.status === "success") {
+            setAllServices(result.message);
+        } else if (result.status === "fail" && result.message === "auth") {
+            navigate("/auth/login", { state: { errorModalOpen: true } });
+        } else {
+            setErrorModalOpen(true);
+            setErrorModalType("error");
+        }
+
+    } catch (error) {
+        // THIS is what you are currently missing. 
+        // It will tell you exactly why the fetch blew up.
+        console.error("THE FETCH CRASHED BECAUSE:", error.message);
+    }
+}
 
         if(isAuthenticated){
             fetchServices();
@@ -106,6 +120,7 @@ export default function MakeAppointment(){
             const result = await response.json();
             if(result.status === "success"){
                 const sortedTimeslot = result.message.sort((a,b)=> a.queueMin - b.queueMin);
+                console.log(sortedTimeslot)
                 setAllTimeslot(sortedTimeslot);
             } else if(result.status === "fail" && result.message === "auth"){
                 navigate("/auth/login", {state: {errorModalOpen: true}});
@@ -126,7 +141,7 @@ export default function MakeAppointment(){
         if(!allServices || allServices.length === 0 || !serviceIdSelected || !staffIdSelected){
             return {service: null, staff: null, total: null}
         };
-                
+
         const selectedService = allServices.find(service => service._id === serviceIdSelected);
         const selectedServiceName = selectedService.name;
         const selectedStaffName = staffIdSelected === "any" ? "Any Staff" : selectedService.staff.find(staff => staff._id === staffIdSelected);

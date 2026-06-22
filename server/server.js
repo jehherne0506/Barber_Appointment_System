@@ -39,7 +39,7 @@ const limiter = rateLimit({
     ipv6Subnet: 56, 
 });
 
-let redisClient = connectRedisCache();
+// let redisClient = connectRedisCache();
 
 const app = express();
 app.set("trust proxy", 1);
@@ -404,6 +404,7 @@ console.log("refresh ok")
 
 app.post('/auth/login', async(req,res)=>{
   const {email, password} = req.body;
+
   try{
     const user = await User.findOne({
       email: email
@@ -574,17 +575,17 @@ app.get("/appointment", verifyUser, async(req,res)=>{
 
 app.get("/appointment/services", verifyUser, async(req,res)=>{
   try{
-    const client = await redisClient;
-    let allServices = await client.get('allServices');console.log(allServices)
-    if(allServices){
-        return res.json({status: "success", message: JSON.parse(allServices)});
-    } else{
+    // const client = await redisClient;
+    // let allServices = await client.get('allServices');console.log(allServices)
+    // if(allServices){
+    //     return res.json({status: "success", message: JSON.parse(allServices)});
+    // } else{
       allServices = await Service.find({}).populate("staff", "username avatar");
-      await client.set("allServices", JSON.stringify(allServices), {
-        EX: 36000 
-      });
+      // await client.set("allServices", JSON.stringify(allServices), {
+      //   EX: 36000 
+      // });
       return res.json({status: "success", message: allServices});
-    }
+    // }
   } catch(err){
     console.log(err);
     return res.json({status: "fail"});
@@ -859,12 +860,12 @@ app.delete("/appointment/cancelAppointment", verifyUser, async(req,res)=>{
 
 app.get("/liveQueue", verifyUser, async(req, res)=>{
   try{
-    const client = await redisClient;
+    // const client = await redisClient;
     
-    const cacheLiveQueue = await client.get('liveQueue');
-    if(cacheLiveQueue){
-      return res.json({status: "success", message: JSON.parse(cacheLiveQueue)});
-    }
+    // const cacheLiveQueue = await client.get('liveQueue');
+    // if(cacheLiveQueue){
+    //   return res.json({status: "success", message: JSON.parse(cacheLiveQueue)});
+    // }
     const appointmentsByBarber = await User.aggregate([
       {
         $match: {role: "STAFF"} // fetch users that match the role "STAFF"
@@ -912,9 +913,9 @@ app.get("/liveQueue", verifyUser, async(req, res)=>{
         } 
       },
     ]);
-    await client.set('liveQueue', JSON.stringify(appointmentsByBarber), {
-      EX: 60
-    })
+    // await client.set('liveQueue', JSON.stringify(appointmentsByBarber), {
+    //   EX: 60
+    // })
     return res.json({status: "success", message: appointmentsByBarber});
   } catch(err){
     console.log(err);
@@ -1392,7 +1393,18 @@ function processVoucherPrice(voucherFound, originalPrice){
     } return Number(originalPrice) - Number(discountValue);
 }
 
-server.listen(5000, async ()=>{
-    await connectMongoose();
-    console.log("Server running on port 5000");
-})
+async function startServer() {
+    try {
+        await connectMongoose();
+        console.log("MongoDB connected");
+
+        server.listen(5000, () => {
+            console.log("Server running on port 5000");
+        });
+
+    } catch (err) {
+        console.error("Failed to connect DB:", err);
+    }
+}
+
+startServer();
