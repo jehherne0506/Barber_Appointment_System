@@ -219,7 +219,7 @@ passport.use(new FacebookStrategy({
 },
 async function(req, fbAccessToken, fbRefreshToken, profile, cb) {
  try{
-    const email = profile.emails[0].value;
+    let email = profile.emails[0].value;
 
     if(!email){
       email = `${profile.id}@facebook.com.fake`
