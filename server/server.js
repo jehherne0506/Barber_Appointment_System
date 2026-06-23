@@ -155,7 +155,7 @@ passport.use(new GoogleStrategy({
   },
   async function(req, googleAccessToken, googleRefreshToken, profile, cb) {
     try{
-      const email = profile.emails[0].value;
+      let email = profile.emails[0].value;
 
       if(!email){
         email = `${profile.id}@google.com.fake`
@@ -218,43 +218,51 @@ passport.use(new FacebookStrategy({
   passReqToCallback: true
 },
 async function(req, fbAccessToken, fbRefreshToken, profile, cb) {
- try{
-    let email = profile.emails[0].value;
+ try {
+    // 1. Safely extract email
+    let email = profile.emails && profile.emails.length > 0 
+      ? profile.emails[0].value 
+      : `${profile.id}@facebook.com.fake`;
 
-    if(!email){
-      email = `${profile.id}@facebook.com.fake`
-    }
+    // 2. Safely extract avatar
+    let avatarUrl = profile.photos && profile.photos.length > 0 
+      ? profile.photos[0].value 
+      : ""; // Provide a default empty string or default image URL
 
-    const userFound = await User.findOne({
-      email: email
-    });
+    // 3. Safely extract username (sometimes Facebook doesn't return displayName)
+    let username = profile.displayName || `User_${profile.id}`;
+
+    const userFound = await User.findOne({ email: email });
 
     let user;
-    if(userFound){
-      if(!userFound.facebookId){
+    if (userFound) {
+      if (!userFound.facebookId) {
         userFound.facebookId = profile.id;
+        // Also update avatar if they didn't have one
+        if (!userFound.avatar && avatarUrl) userFound.avatar = avatarUrl;
         await userFound.save();
       }
       user = userFound;
-    } else{
+    } else {
       const newUser = new User({
-        username: profile.displayName,
+        username: username,
         email: email,
-        avatar: profile.photos[0]?.value,
+        avatar: avatarUrl,
         facebookId: profile.id,
       });
       await newUser.save();
       user = newUser;
-    };
-
-      const jwtRefreshToken = jwt.sign({id: user.id, username: user.username, email: user.email, avatar: user.avatar, role: user.role}, process.env.JWT_SECRET, {expiresIn: '7d'});
-      const jwtAccessToken = jwt.sign({id: user.id, username: user.username, email: user.email, avatar: user.avatar, role: user.role}, process.env.JWT_SECRET, {expiresIn: '15m'});
-
-      return cb(null, user, {jwtRefreshToken, jwtAccessToken});
-    } catch(err){
-        console.log(err);
-        return cb(err, null);
     }
+
+    const jwtRefreshToken = jwt.sign({ id: user.id, username: user.username, email: user.email, avatar: user.avatar, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const jwtAccessToken = jwt.sign({ id: user.id, username: user.username, email: user.email, avatar: user.avatar, role: user.role }, process.env.JWT_SECRET, { expiresIn: '15m' });
+
+    return cb(null, user, { jwtRefreshToken, jwtAccessToken });
+  } catch (err) {
+    // THIS IS CRITICAL FOR DEBUGGING
+    console.error("FACEBOOK STRATEGY CRASHED:", err);
+    return cb(err, null);
+  }
 }
 ));
 
