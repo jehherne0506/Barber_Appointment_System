@@ -33,15 +33,56 @@ var GoogleStrategy = require('passport-google-oauth20').Strategy;
 var FacebookStrategy = require('passport-facebook').Strategy;
 
 const usedOAuthCodes = new Set();
+const pendingOAuthCodes = new Map(); // stores result of first request
 
 function oauthDedupeGuard(req, res, next) {
   const code = req.query.code;
-  if (!code || usedOAuthCodes.has(code)) {
-    console.warn('Duplicate/missing OAuth code blocked');
+
+  if (!code) {
     return res.redirect('https://barber-appointment-system-1.onrender.com/auth/login');
   }
+
+  // Second request — wait for first to finish, then reuse its result
+  if (usedOAuthCodes.has(code)) {
+    const result = pendingOAuthCodes.get(code);
+    if (result) {
+      // First request already completed, reuse cookies and redirect
+      generateCookie(res, result.jwtRefreshToken, result.jwtAccessToken);
+      return res.redirect(
+        result.role === "STAFF"
+          ? "https://barber-appointment-system-1.onrender.com/staff"
+          : "https://barber-appointment-system-1.onrender.com/"
+      );
+    }
+    // First request still in progress, wait for it
+    let waited = 0;
+    const interval = setInterval(() => {
+      waited += 100;
+      const result = pendingOAuthCodes.get(code);
+      if (result) {
+        clearInterval(interval);
+        generateCookie(res, result.jwtRefreshToken, result.jwtAccessToken);
+        return res.redirect(
+          result.role === "STAFF"
+            ? "https://barber-appointment-system-1.onrender.com/staff"
+            : "https://barber-appointment-system-1.onrender.com/"
+        );
+      }
+      if (waited >= 5000) {
+        clearInterval(interval);
+        return res.redirect('https://barber-appointment-system-1.onrender.com/auth/login');
+      }
+    }, 100);
+    return;
+  }
+
+  // First request — mark code as used and proceed
   usedOAuthCodes.add(code);
-  setTimeout(() => usedOAuthCodes.delete(code), 5 * 60 * 1000);
+  setTimeout(() => {
+    usedOAuthCodes.delete(code);
+    pendingOAuthCodes.delete(code);
+  }, 5 * 60 * 1000);
+
   next();
 }
 
