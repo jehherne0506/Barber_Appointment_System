@@ -259,9 +259,11 @@ async function(req, fbAccessToken, fbRefreshToken, profile, cb) {
 
     return cb(null, user, { jwtRefreshToken, jwtAccessToken });
   } catch (err) {
-    // THIS IS CRITICAL FOR DEBUGGING
-    console.error("FACEBOOK STRATEGY CRASHED:", err);
-    return cb(err, null);
+    console.error("--- DATABASE/STRATEGY ERROR ---");
+  console.error("Name:", err.name);
+  console.error("Message:", err.message);
+  if (err.errors) console.error("Validation Details:", JSON.stringify(err.errors));
+  return cb(err, null);
   }
 }
 ));
