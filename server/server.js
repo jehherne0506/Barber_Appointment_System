@@ -282,10 +282,10 @@ async function(req, fbAccessToken, fbRefreshToken, profile, cb) {
 ));
 
 app.get('/auth/facebook',
-  oauthDedupeGuard,
   passport.authenticate('facebook', {session: false, scope: ['email']}));
 
 app.get('/auth/facebook/callback',
+  oauthDedupeGuard,
   passport.authenticate('facebook', { failureRedirect: 'https://barber-appointment-system-1.onrender.com/auth/login', session: false }),
   function(req, res) {
     // Successful authentication, redirect home.
