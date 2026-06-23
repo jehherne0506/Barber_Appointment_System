@@ -115,7 +115,7 @@ export default function Register(){
 
                     <div className="flex gap-5 justify-center mt-2">
                         <a className="bg-white rounded-full p-2" href={`${API_URL}/auth/google`}><img className="w-8" src="https://img.icons8.com/?size=100&id=17949&format=png&color=000000" alt="Google Logo" /></a>
-                        <a className="bg-white rounded-full p-2" href={`${API_URL}/auth/facebook`}><img className="w-8" src="https://img.icons8.com/?size=100&id=118497&format=png&color=000000" alt="Facebook Logo" /></a>
+                        <a className="bg-white rounded-full p-2" onClick={() => { window.location.href = `${API_URL}/auth/facebook`; }}><img className="w-8" src="https://img.icons8.com/?size=100&id=118497&format=png&color=000000" alt="Facebook Logo" /></a>
                     </div>
 
                     <div className="mt-4">
