@@ -331,7 +331,12 @@ app.get('/auth/facebook/callback',
   function(req, res) {
     // Successful authentication, redirect home.
     const {jwtRefreshToken, jwtAccessToken} = req.authInfo;
+
+    const code = req.query.code;
+
     generateCookie(res, jwtRefreshToken, jwtAccessToken);
+    pendingOAuthCodes.set(code, { jwtRefreshToken, jwtAccessToken, role: req.user.role });
+
     if(req.user.role === "STAFF"){
       return res.redirect("https://barber-appointment-system-1.onrender.com/staff");
     } else{
