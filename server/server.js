@@ -32,6 +32,19 @@ const connectRedisCache = require('./connectRedisCache');
 var GoogleStrategy = require('passport-google-oauth20').Strategy;
 var FacebookStrategy = require('passport-facebook').Strategy;
 
+const usedOAuthCodes = new Set();
+
+function oauthDedupeGuard(req, res, next) {
+  const code = req.query.code;
+  if (!code || usedOAuthCodes.has(code)) {
+    console.warn('Duplicate/missing OAuth code blocked');
+    return res.redirect('https://barber-appointment-system-1.onrender.com/auth/login');
+  }
+  usedOAuthCodes.add(code);
+  setTimeout(() => usedOAuthCodes.delete(code), 5 * 60 * 1000);
+  next();
+}
+
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
     limit: 500,
@@ -269,6 +282,7 @@ async function(req, fbAccessToken, fbRefreshToken, profile, cb) {
 ));
 
 app.get('/auth/facebook',
+  oauthDedupeGuard,
   passport.authenticate('facebook', {session: false, scope: ['email']}));
 
 app.get('/auth/facebook/callback',
